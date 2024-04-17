@@ -2,9 +2,9 @@ package com.senior.assessment.domain.dto.item;
 
 import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +25,7 @@ public class ItemCreateUpdateDto {
     private ItemType type;
 
     @NotNull
-    @Positive
+    @DecimalMin(value = "0.01", message = "price min is R$ 00,01.")
     private BigDecimal price;
 
     @NotNull
