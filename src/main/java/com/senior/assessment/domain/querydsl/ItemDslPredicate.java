@@ -1,8 +1,9 @@
-package com.senior.assessment.domain.querydsl.search;
+package com.senior.assessment.domain.querydsl;
 
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.senior.assessment.domain.entity.QItem;
+import com.senior.assessment.domain.querydsl.search.ItemSearch;
 
 import static com.senior.assessment.utilities.Utils.isPresent;
 
@@ -16,7 +17,7 @@ public class ItemDslPredicate {
 
         //TODO: Depois retirar acentuação
         if (isPresent(itemSearch.query()))
-            predicate = predicate.and(qItem.name.likeIgnoreCase("%".concat(itemSearch.query()).concat("%")));
+            predicate = predicate.and(qItem.name.likeIgnoreCase("%" + itemSearch.query() + "%"));
 
         if (isPresent(itemSearch.id()))
             predicate = predicate.and(qItem.id.eq(itemSearch.id()));
