@@ -10,5 +10,6 @@ public interface ItemRepository extends JpaRepository<Item, UUID> {
     boolean existsItemById(UUID itemId);
 
     boolean existsItemByNameAndType(String name, ItemType type);
+
     boolean existsItemByNameAndTypeAndIdNot(String name, ItemType type, UUID id);
 }
