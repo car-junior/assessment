@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ItemCreateDto {
+public class ItemCreateUpdateDto {
     @NotNull
     @NotEmpty
     private String name;
@@ -28,6 +28,7 @@ public class ItemCreateDto {
     @Positive
     private BigDecimal price;
 
+    @NotNull
     private ItemStatus status;
 
     public String getName() {
