@@ -18,7 +18,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ItemService {
     private final ItemRepository itemRepository;
-
     public Item createItem(Item item) {
         assertNotExistsItemByNameAndType(item.getName(), item.getType());
         return itemRepository.save(item);
@@ -47,6 +46,9 @@ public class ItemService {
         itemRepository.deleteById(itemId);
     }
 
+    public Page<Item> getAllItem(ItemSearch itemSearch, Pageable pagination) {
+        return itemRepository.findAll(ItemDslPredicate.expression(itemSearch), pagination);
+    }
 
     // privates methods
 
@@ -57,7 +59,6 @@ public class ItemService {
                     .message(String.format("Cannot found item with id %s.", itemId))
                     .build();
     }
-
 
     private void assertNotExistsItemByNameAndType(String name, ItemType type) {
         if (itemRepository.existsItemByNameAndType(name, type))
@@ -75,7 +76,4 @@ public class ItemService {
                     .build();
     }
 
-    public Page<Item> getAllItem(ItemSearch itemSearch, Pageable pagination) {
-        return itemRepository.findAll(ItemDslPredicate.expression(itemSearch), pagination);
-    }
 }
