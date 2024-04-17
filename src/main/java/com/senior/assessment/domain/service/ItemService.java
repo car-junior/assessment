@@ -2,13 +2,17 @@ package com.senior.assessment.domain.service;
 
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.enums.ItemType;
+import com.senior.assessment.domain.querydsl.search.ItemDslPredicate;
 import com.senior.assessment.domain.querydsl.search.ItemSearch;
 import com.senior.assessment.domain.repository.ItemRepository;
 import com.senior.assessment.infrastructure.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -72,6 +76,7 @@ public class ItemService {
                     .build();
     }
 
-    public void getAllItem(ItemSearch itemSearch) {
+    public Page<Item> getAllItem(ItemSearch itemSearch, Pageable pagination) {
+        return itemRepository.findAll(ItemDslPredicate.expression(itemSearch), pagination);
     }
 }

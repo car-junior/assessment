@@ -1,7 +1,9 @@
 package com.senior.assessment.config.mapper;
 
+import com.senior.assessment.domain.dto.PageResult;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,13 +32,13 @@ public class ModelMapperService {
         return modelMapper.map(item, clazz);
     }
 
-//    public <T> PageResult<T> toPage(Class<T> clazz, Page<?> page) {
-//        if (page == null) return new PageResult<>();
-//        return new PageResult<>(
-//                page.getTotalPages(),
-//                page.getTotalElements(),
-//                toList(clazz, page.getContent())
-//        );
-//    }
+    public <T> PageResult<T> toPage(Class<T> clazz, Page<?> page) {
+        if (page == null) return new PageResult<>();
+        return new PageResult<>(
+                page.getTotalPages(),
+                page.getTotalElements(),
+                toList(clazz, page.getContent())
+        );
+    }
 
 }

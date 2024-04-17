@@ -1,6 +1,7 @@
 package com.senior.assessment.rest;
 
 import com.senior.assessment.config.mapper.ModelMapperService;
+import com.senior.assessment.domain.dto.PageResult;
 import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
 import com.senior.assessment.domain.dto.item.ItemDetailDto;
 import com.senior.assessment.domain.entity.Item;
@@ -8,6 +9,7 @@ import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.querydsl.search.ItemSearch;
 import com.senior.assessment.domain.service.ItemService;
+import com.senior.assessment.utilities.Utils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+
+import static com.senior.assessment.utilities.Utils.createPagination;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,7 +56,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Object>> getAllItem(
+    public ResponseEntity<PageResult<ItemDetailDto>> getAllItem(
             @RequestParam(required = false) UUID itemId,
             @RequestParam(required = false) String query,
             @RequestParam(required = false) ItemType type,
@@ -67,10 +71,9 @@ public class ItemController {
                 .type(type)
                 .status(status)
                 .build();
-//        var pagination = PageRequest.of(page, itemsPerPage, Sort.by(Sort.Direction.fromString(sort), sortName));
-        itemService.getAllItem(itemSearch);
-        return ResponseEntity.noContent().build();
-//        return ResponseEntity.ok(modelMapperService.toPage(CategoryDetailsListDto.class, categories));
+        var pagination = createPagination(page, itemsPerPage, sort, sortName);
+        var result = itemService.getAllItem(itemSearch, pagination);
+        return ResponseEntity.ok(modelMapperService.toPage(ItemDetailDto.class, result));
     }
 
 }
