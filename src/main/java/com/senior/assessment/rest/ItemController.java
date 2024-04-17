@@ -9,13 +9,11 @@ import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.querydsl.search.ItemSearch;
 import com.senior.assessment.domain.service.ItemService;
-import com.senior.assessment.utilities.Utils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 import static com.senior.assessment.utilities.Utils.createPagination;

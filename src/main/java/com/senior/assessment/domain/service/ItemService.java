@@ -5,6 +5,7 @@ import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.querydsl.ItemDslPredicate;
 import com.senior.assessment.domain.querydsl.search.ItemSearch;
 import com.senior.assessment.domain.repository.ItemRepository;
+import com.senior.assessment.domain.repository.OrderItemRepository;
 import com.senior.assessment.infrastructure.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ItemService {
     private final ItemRepository itemRepository;
+    private final OrderItemRepository orderItemRepository;
+
     public Item createItem(Item item) {
         assertNotExistsItemByNameAndType(item.getName(), item.getType());
         return itemRepository.save(item);
@@ -43,6 +46,7 @@ public class ItemService {
     // Não deve ser possível excluir um produto/serviço se ele estiver associado a algum pedido
     public void deleteItemById(UUID itemId) {
         assertExistsItemById(itemId);
+        assertNotLinkedItemWithOrder(itemId);
         itemRepository.deleteById(itemId);
     }
 
@@ -73,6 +77,14 @@ public class ItemService {
             throw CustomException.builder()
                     .httpStatus(HttpStatus.BAD_REQUEST)
                     .message(String.format("Already item with this name: %s, type: %s.", name, type))
+                    .build();
+    }
+
+    private void assertNotLinkedItemWithOrder(UUID itemId) {
+        if (orderItemRepository.existsOrderItemByItemId(itemId))
+            throw CustomException.builder()
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .message("Cannot delete item because have linked order.")
                     .build();
     }
 
