@@ -22,6 +22,7 @@ public class ItemService {
 
     public Item updateItem(UUID itemId, Item item) {
         assertExistsItemById(itemId);
+        assertNotExistsItemByNameAndTypeAndIdNot(item.getName(), item.getType(), itemId);
         item.setId(itemId);
         return itemRepository.save(item);
     }
@@ -58,7 +59,15 @@ public class ItemService {
         if (itemRepository.existsItemByNameAndType(name, type))
             throw CustomException.builder()
                     .httpStatus(HttpStatus.BAD_REQUEST)
-                    .message(String.format("Already item with this name: %s", name))
+                    .message(String.format("Already item with this name: %s, type: %s.", name, type))
+                    .build();
+    }
+
+    private void assertNotExistsItemByNameAndTypeAndIdNot(String name, ItemType type, UUID id) {
+        if (itemRepository.existsItemByNameAndTypeAndIdNot(name, type, id))
+            throw CustomException.builder()
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .message(String.format("Already item with this name: %s, type: %s.", name, type))
                     .build();
     }
 }
