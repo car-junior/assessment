@@ -2,6 +2,7 @@ package com.senior.assessment.domain.service;
 
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.enums.ItemType;
+import com.senior.assessment.domain.querydsl.search.ItemSearch;
 import com.senior.assessment.domain.repository.ItemRepository;
 import com.senior.assessment.infrastructure.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -69,5 +70,8 @@ public class ItemService {
                     .httpStatus(HttpStatus.BAD_REQUEST)
                     .message(String.format("Already item with this name: %s, type: %s.", name, type))
                     .build();
+    }
+
+    public void getAllItem(ItemSearch itemSearch) {
     }
 }
