@@ -1,6 +1,7 @@
 package com.senior.assessment.domain.service;
 
 import com.senior.assessment.domain.entity.Item;
+import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.repository.ItemRepository;
 import com.senior.assessment.infrastructure.exception.CustomException;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,7 @@ public class ItemService {
     private final ItemRepository itemRepository;
 
     public Item createItem(Item item) {
+        assertNotExistsItemByNameAndType(item.getName(), item.getType());
         return itemRepository.save(item);
     }
 
@@ -51,4 +53,12 @@ public class ItemService {
                     .build();
     }
 
+
+    private void assertNotExistsItemByNameAndType(String name, ItemType type) {
+        if (itemRepository.existsItemByNameAndType(name, type))
+            throw CustomException.builder()
+                    .httpStatus(HttpStatus.BAD_REQUEST)
+                    .message(String.format("Already item with this name: %s", name))
+                    .build();
+    }
 }

@@ -42,7 +42,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public  ResponseEntity<Map<String, Object>> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
-        exception.printStackTrace();
         var customException = CustomException.builder()
                 .httpStatus(HttpStatus.BAD_REQUEST)
                 .message(exception.getCause().getCause().getMessage())
