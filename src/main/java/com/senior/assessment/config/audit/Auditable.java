@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@SuperBuilder
 @MappedSuperclass
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder(toBuilder = true)
 @EntityListeners(AuditingEntityListener.class)
 public abstract class Auditable {
 
