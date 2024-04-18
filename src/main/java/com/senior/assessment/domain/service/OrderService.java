@@ -36,6 +36,12 @@ public class OrderService {
         return validationAndSave(order);
     }
 
+    @Transactional
+    public void deleteOrderById(UUID orderId) {
+        var order = getOrderById(orderId);
+        assertOrderIsOpen(order, String.format("Cannot delete order %s.", OrderStatus.CLOSED));
+        orderRepository.deleteById(order.getId());
+    }
 
     public Order getOrderById(UUID orderId) {
         return orderRepository.findById(orderId)
@@ -81,7 +87,7 @@ public class OrderService {
     }
 
     private void assertCanApplyDiscount(Order order) {
-        assertOrderIsOpen(order);
+        assertOrderIsOpen(order, String.format("Cannot apply discount in order %s.", OrderStatus.CLOSED));
         hasDiscountAndContainsProductItem(order);
     }
 
@@ -118,11 +124,11 @@ public class OrderService {
                     ).build();
     }
 
-    private void assertOrderIsOpen(Order order) {
+    private void assertOrderIsOpen(Order order, String message) {
         if (order.getStatus() == OrderStatus.CLOSED)
             throw CustomException.builder()
                     .httpStatus(HttpStatus.NOT_FOUND)
-                    .message(String.format("Cannot apply discount in order %s.", OrderStatus.CLOSED))
+                    .message(message)
                     .build();
     }
 
@@ -150,5 +156,4 @@ public class OrderService {
                     .message(String.format("Cannot found order with id %s.", orderId))
                     .build();
     }
-
 }

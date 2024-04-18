@@ -40,12 +40,12 @@ public class OrderController {
                 modelMapperService.toObject(OrderDetailDto.class, orderService.getOrderById(orderId))
         );
     }
-//
-//    @DeleteMapping("/{itemId}")
-//    public ResponseEntity<Void> deleteById(@PathVariable(name = "itemId") UUID itemId) {
-//        itemService.deleteItemById(itemId);
-//        return ResponseEntity.noContent().build();
-//    }
+
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<Void> deleteById(@PathVariable(name = "orderId") UUID orderId) {
+        orderService.deleteOrderById(orderId);
+        return ResponseEntity.noContent().build();
+    }
 //
 //    @GetMapping
 //    public ResponseEntity<PageResult<ItemDetailDto>> getAllItem(
