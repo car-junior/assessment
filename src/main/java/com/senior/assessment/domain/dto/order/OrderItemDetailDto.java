@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 @Getter
@@ -14,6 +15,8 @@ public class OrderItemDetailDto {
     private UUID id;
     private int amount;
     private ItemDetailDto item;
+    private BigDecimal itemPrice;
+
     @Getter
     @Setter
     @NoArgsConstructor

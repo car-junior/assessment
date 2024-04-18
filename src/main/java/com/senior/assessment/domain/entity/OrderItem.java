@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -24,6 +25,9 @@ public class OrderItem extends Auditable {
     @ManyToOne
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
+
+    @Column(name = "item_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal itemPrice;
 
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)

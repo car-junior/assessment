@@ -60,15 +60,18 @@ public class OrderService {
 
     private Order validationAndSave(Order order) {
         var items = getItemsByIds(extractItemIds(order));
-        addOrderInOrderItems(order);
         updateItemsInOrderItems(order, items);
+        setOrderAndPriceForOrderItems(order);
         assertCanApplyDiscount(order);
         return orderRepository.save(order);
     }
 
-    private void addOrderInOrderItems(Order order) {
+    private void setOrderAndPriceForOrderItems(Order order) {
         order.getOrderItems()
-                .forEach(oi -> oi.setOrder(order));
+                .forEach(orderItem -> {
+                    orderItem.setOrder(order);
+                    orderItem.setItemPrice(orderItem.getItem().getPrice());
+                });
     }
 
     private void updateItemsInOrderItems(Order order, Set<Item> items) {

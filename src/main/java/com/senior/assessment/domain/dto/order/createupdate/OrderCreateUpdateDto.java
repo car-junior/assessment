@@ -1,10 +1,7 @@
 package com.senior.assessment.domain.dto.order.createupdate;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -17,6 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderCreateUpdateDto {
+
+    @Digits(integer = 1, fraction = 2)
     @DecimalMin(value = "0.0", message = "Min discount 0.0")
     @DecimalMax(value = "1.0", message = "Max discount 1.0")
     private double discount;
