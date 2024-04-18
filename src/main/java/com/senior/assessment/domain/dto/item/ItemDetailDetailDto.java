@@ -7,15 +7,18 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
-public class ItemDetailDto {
+public class ItemDetailDetailDto {
     private UUID id;
     private String name;
     private ItemType type;
     private BigDecimal price;
     private ItemStatus status;
+    private LocalDateTime createdDate;
+    private LocalDateTime lastModifiedDate;
 }

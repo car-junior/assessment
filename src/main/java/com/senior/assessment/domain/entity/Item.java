@@ -20,6 +20,7 @@ import java.util.UUID;
 @Table(name = "item", schema = "dbo")
 @EntityListeners(AuditingEntityListener.class)
 public class Item extends Auditable {
+    //TODO: Adicionar bean validations nas entidades
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private UUID id;

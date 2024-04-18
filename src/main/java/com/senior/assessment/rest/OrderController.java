@@ -3,7 +3,7 @@ package com.senior.assessment.rest;
 import com.senior.assessment.config.mapper.ModelMapperService;
 import com.senior.assessment.domain.dto.PageResult;
 import com.senior.assessment.domain.dto.order.OrderStatusChangeDto;
-import com.senior.assessment.domain.dto.order.detailslist.OrderDetailDto;
+import com.senior.assessment.domain.dto.order.detailslist.OrderDetailDetailDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderCreateUpdateDto;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.enums.ItemType;
@@ -27,24 +27,24 @@ public class OrderController {
     private final ModelMapperService modelMapperService;
 
     @PostMapping
-    public ResponseEntity<OrderDetailDto> create(@Valid @RequestBody OrderCreateUpdateDto orderCreate) {
+    public ResponseEntity<OrderDetailDetailDto> create(@Valid @RequestBody OrderCreateUpdateDto orderCreate) {
         var order = orderService.createOrder(modelMapperService.toObject(Order.class, orderCreate));
-        return ResponseEntity.ok(modelMapperService.toObject(OrderDetailDto.class, order));
+        return ResponseEntity.ok(modelMapperService.toObject(OrderDetailDetailDto.class, order));
     }
 
     @PutMapping("/{orderId}")
-    public ResponseEntity<OrderDetailDto> update(@PathVariable(name = "orderId") UUID orderId,
-                                                 @Valid @RequestBody OrderCreateUpdateDto orderUpdate) {
+    public ResponseEntity<OrderDetailDetailDto> update(@PathVariable(name = "orderId") UUID orderId,
+                                                       @Valid @RequestBody OrderCreateUpdateDto orderUpdate) {
         var order = modelMapperService.toObject(Order.class, orderUpdate);
         return ResponseEntity.ok(
-                modelMapperService.toObject(OrderDetailDto.class, orderService.updateOrder(orderId, order))
+                modelMapperService.toObject(OrderDetailDetailDto.class, orderService.updateOrder(orderId, order))
         );
     }
 
     @GetMapping("/{orderId}")
-    public ResponseEntity<OrderDetailDto> getById(@PathVariable(name = "orderId") UUID orderId) {
+    public ResponseEntity<OrderDetailDetailDto> getById(@PathVariable(name = "orderId") UUID orderId) {
         return ResponseEntity.ok(
-                modelMapperService.toObject(OrderDetailDto.class, orderService.getOrderById(orderId))
+                modelMapperService.toObject(OrderDetailDetailDto.class, orderService.getOrderById(orderId))
         );
     }
 
@@ -55,7 +55,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResult<OrderDetailDto>> getAllOrder(
+    public ResponseEntity<PageResult<OrderDetailDetailDto>> getAllOrder(
             @RequestParam(required = false) UUID orderId,
             @RequestParam(required = false) String query,
             @RequestParam(required = false) ItemType itemType,
@@ -72,7 +72,7 @@ public class OrderController {
                 .build();
         var pagination = createPagination(page, itemsPerPage, sort, sortName);
         var result = orderService.getAllOrder(orderSearch, pagination);
-        return ResponseEntity.ok(modelMapperService.toPage(OrderDetailDto.class, result));
+        return ResponseEntity.ok(modelMapperService.toPage(OrderDetailDetailDto.class, result));
     }
 
     @PatchMapping("/{orderId}")

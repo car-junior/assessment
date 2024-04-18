@@ -6,16 +6,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Setter
 @NoArgsConstructor
-public class OrderItemDetailDto {
+public class OrderItemDetailDetailDto {
     private UUID id;
     private int amount;
     private ItemDetailDto item;
     private BigDecimal itemPrice;
+    private LocalDateTime createdDate;
+    private LocalDateTime lastModifiedDate;
 
     @Getter
     @Setter
