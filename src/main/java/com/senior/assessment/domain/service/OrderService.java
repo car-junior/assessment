@@ -35,10 +35,11 @@ public class OrderService {
     }
 
     @Transactional
-    public Order updateOrder(UUID orderId, Order order) {
-        assertExistsOrderById(orderId);
-        order.setId(orderId);
-        return validationAndSave(order);
+    public Order updateOrder(UUID orderId, Order updateOrder) {
+        var order = getOrderById(orderId);
+        assertOrderIsOpen(order, String.format("Cannot edit order because is %s.", OrderStatus.CLOSED));
+        updateOrder.setId(order.getId());
+        return validationAndSave(updateOrder);
     }
 
     @Transactional
@@ -64,7 +65,7 @@ public class OrderService {
     @Transactional
     public void updateStatus(UUID orderId, OrderStatusChangeDto orderStatus) {
         var order = getOrderById(orderId);
-        assertOrderIsOpen(order, String.format("order %s already %s.", order.getId(), OrderStatus.CLOSED));
+        assertOrderIsOpen(order, String.format("Order %s already %s.", order.getId(), OrderStatus.CLOSED));
         orderRepository.updateStatus(order.getId(), orderStatus.getStatus());
     }
 
@@ -106,7 +107,6 @@ public class OrderService {
     }
 
     private void assertCanApplyDiscount(Order order) {
-        assertOrderIsOpen(order, String.format("Cannot apply discount in order %s.", OrderStatus.CLOSED));
         hasDiscountAndContainsProductItem(order);
     }
 
