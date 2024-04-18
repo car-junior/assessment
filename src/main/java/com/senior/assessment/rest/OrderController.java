@@ -25,15 +25,15 @@ public class OrderController {
         return ResponseEntity.ok(modelMapperService.toObject(OrderDetailDto.class, order));
     }
 
-//    @PutMapping("/{itemId}")
-//    public ResponseEntity<ItemDetailDto> update(@PathVariable(name = "itemId") UUID itemId,
-//                                                @Valid @RequestBody ItemCreateUpdateDto itemUpdate) {
-//        var item = modelMapperService.toObject(Item.class, itemUpdate);
-//        return ResponseEntity.ok(
-//                modelMapperService.toObject(ItemDetailDto.class, itemService.updateItem(itemId, item))
-//        );
-//    }
-//
+    @PutMapping("/{orderId}")
+    public ResponseEntity<OrderDetailDto> update(@PathVariable(name = "orderId") UUID orderId,
+                                                @Valid @RequestBody OrderCreateUpdateDto orderUpdate) {
+        var order = modelMapperService.toObject(Order.class, orderUpdate);
+        return ResponseEntity.ok(
+                modelMapperService.toObject(OrderDetailDto.class, orderService.updateOrder(orderId, order))
+        );
+    }
+
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDetailDto> getById(@PathVariable(name = "orderId") UUID orderId) {
         return ResponseEntity.ok(

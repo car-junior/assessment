@@ -27,12 +27,16 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Order order) {
-        var items = getItemsByIds(extractItemIds(order));
-        addOrderInOrderItems(order);
-        updateItemsInOrderItems(order, items);
-        assertCanApplyDiscount(order);
-        return orderRepository.save(order);
+        return validationAndSave(order);
     }
+
+    @Transactional
+    public Order updateOrder(UUID orderId, Order order) {
+        assertExistsOrderById(orderId);
+        order.setId(orderId);
+        return validationAndSave(order);
+    }
+
 
     public Order getOrderById(UUID orderId) {
         return orderRepository.findById(orderId)
@@ -44,6 +48,14 @@ public class OrderService {
     }
 
     // private methods
+
+    private Order validationAndSave(Order order) {
+        var items = getItemsByIds(extractItemIds(order));
+        addOrderInOrderItems(order);
+        updateItemsInOrderItems(order, items);
+        assertCanApplyDiscount(order);
+        return orderRepository.save(order);
+    }
 
     private void addOrderInOrderItems(Order order) {
         order.getOrderItems()
@@ -128,6 +140,14 @@ public class OrderService {
                             "Cannot apply discount in order because not contain item %s.",
                             ItemType.PRODUCT)
                     ).build();
+    }
+
+    private void assertExistsOrderById(UUID orderId) {
+        if (!orderRepository.existsOrderById(orderId))
+            throw CustomException.builder()
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message(String.format("Cannot found order with id %s.", orderId))
+                    .build();
     }
 
 }
