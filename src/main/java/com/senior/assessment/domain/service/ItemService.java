@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -21,15 +22,17 @@ public class ItemService {
     private final ItemRepository itemRepository;
     private final OrderItemRepository orderItemRepository;
 
+    @Transactional
     public Item createItem(Item item) {
         assertNotExistsItemByNameAndType(item.getName(), item.getType());
         return itemRepository.save(item);
     }
 
-    public Item updateItem(UUID itemId, Item item) {
-        assertExistsItemById(itemId);
-        assertNotExistsItemByNameAndTypeAndIdNot(item.getName(), item.getType(), itemId);
-        item.setId(itemId);
+    @Transactional
+    public Item updateItem(UUID itemId, Item updateItem) {
+        var item = getItemById(itemId);
+        assertNotExistsItemByNameAndTypeAndIdNot(updateItem.getName(), updateItem.getType(), item.getId());
+        updateValues(item, updateItem);
         return itemRepository.save(item);
     }
 
@@ -42,8 +45,7 @@ public class ItemService {
                 );
     }
 
-    // TODO: Depois adicionar validação que olha em ordem items
-    // Não deve ser possível excluir um produto/serviço se ele estiver associado a algum pedido
+    @Transactional
     public void deleteItemById(UUID itemId) {
         assertExistsItemById(itemId);
         assertNotLinkedItemWithOrder(itemId);
@@ -55,6 +57,13 @@ public class ItemService {
     }
 
     // privates methods
+
+    private void updateValues(Item item, Item updateItem) {
+        item.setName(updateItem.getName());
+        item.setType(updateItem.getType());
+        item.setPrice(updateItem.getPrice());
+        item.setStatus(updateItem.getStatus());
+    }
 
     private void assertExistsItemById(UUID itemId) {
         if (!itemRepository.existsItemById(itemId))

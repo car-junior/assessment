@@ -1,10 +1,6 @@
 package com.senior.assessment.domain.enums;
 
-import com.senior.assessment.utilities.Utils;
-
 import java.util.Arrays;
-import java.util.Optional;
-import java.util.function.Predicate;
 
 import static com.senior.assessment.utilities.Utils.existsValue;
 
