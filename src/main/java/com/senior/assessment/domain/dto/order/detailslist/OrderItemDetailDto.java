@@ -1,4 +1,4 @@
-package com.senior.assessment.domain.dto.order;
+package com.senior.assessment.domain.dto.order.detailslist;
 
 import com.senior.assessment.domain.enums.ItemType;
 import lombok.Getter;

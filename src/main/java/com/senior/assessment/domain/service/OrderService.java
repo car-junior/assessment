@@ -1,5 +1,6 @@
 package com.senior.assessment.domain.service;
 
+import com.senior.assessment.domain.dto.order.OrderStatusChangeDto;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.enums.ItemStatus;
@@ -54,6 +55,17 @@ public class OrderService {
                         .message(String.format("Cannot found order with id %s.", orderId))
                         .build()
                 );
+    }
+
+    public Page<Order> getAllOrder(OrderSearch orderSearch, Pageable pagination) {
+        return orderRepository.findAll(OrderDslPredicate.expression(orderSearch), pagination);
+    }
+
+    @Transactional
+    public void updateStatus(UUID orderId, OrderStatusChangeDto orderStatus) {
+        var order = getOrderById(orderId);
+        assertOrderIsOpen(order, String.format("order %s already %s.", order.getId(), OrderStatus.CLOSED));
+        orderRepository.updateStatus(order.getId(), orderStatus.getStatus());
     }
 
     // private methods
@@ -134,7 +146,7 @@ public class OrderService {
     private void assertOrderIsOpen(Order order, String message) {
         if (order.getStatus() == OrderStatus.CLOSED)
             throw CustomException.builder()
-                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .httpStatus(HttpStatus.BAD_REQUEST)
                     .message(message)
                     .build();
     }
@@ -164,7 +176,4 @@ public class OrderService {
                     .build();
     }
 
-    public Page<Order> getAllOrder(OrderSearch orderSearch, Pageable pagination) {
-        return orderRepository.findAll(OrderDslPredicate.expression(orderSearch), pagination);
-    }
 }

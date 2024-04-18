@@ -2,7 +2,8 @@ package com.senior.assessment.rest;
 
 import com.senior.assessment.config.mapper.ModelMapperService;
 import com.senior.assessment.domain.dto.PageResult;
-import com.senior.assessment.domain.dto.order.OrderDetailDto;
+import com.senior.assessment.domain.dto.order.OrderStatusChangeDto;
+import com.senior.assessment.domain.dto.order.detailslist.OrderDetailDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderCreateUpdateDto;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.enums.ItemType;
@@ -33,7 +34,7 @@ public class OrderController {
 
     @PutMapping("/{orderId}")
     public ResponseEntity<OrderDetailDto> update(@PathVariable(name = "orderId") UUID orderId,
-                                                @Valid @RequestBody OrderCreateUpdateDto orderUpdate) {
+                                                 @Valid @RequestBody OrderCreateUpdateDto orderUpdate) {
         var order = modelMapperService.toObject(Order.class, orderUpdate);
         return ResponseEntity.ok(
                 modelMapperService.toObject(OrderDetailDto.class, orderService.updateOrder(orderId, order))
@@ -74,4 +75,10 @@ public class OrderController {
         return ResponseEntity.ok(modelMapperService.toPage(OrderDetailDto.class, result));
     }
 
+    @PatchMapping("/{orderId}")
+    public ResponseEntity<Void> deleteById(@PathVariable(name = "orderId") UUID orderId,
+                                           @Valid @RequestBody OrderStatusChangeDto orderStatus) {
+        orderService.updateStatus(orderId, orderStatus);
+        return ResponseEntity.noContent().build();
+    }
 }
