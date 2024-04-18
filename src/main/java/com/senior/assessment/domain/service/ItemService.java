@@ -68,7 +68,7 @@ public class ItemService {
         if (itemRepository.existsItemByNameAndType(name, type))
             throw CustomException.builder()
                     .httpStatus(HttpStatus.BAD_REQUEST)
-                    .message(String.format("Already item with this name: %s, type: %s.", name, type))
+                    .message(String.format("Already item with this name: %s, itemType: %s.", name, type))
                     .build();
     }
 
@@ -76,7 +76,7 @@ public class ItemService {
         if (itemRepository.existsItemByNameAndTypeAndIdNot(name, type, id))
             throw CustomException.builder()
                     .httpStatus(HttpStatus.BAD_REQUEST)
-                    .message(String.format("Already item with this name: %s, type: %s.", name, type))
+                    .message(String.format("Already item with this name: %s, itemType: %s.", name, type))
                     .build();
     }
 

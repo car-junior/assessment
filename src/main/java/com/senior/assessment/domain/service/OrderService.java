@@ -5,10 +5,14 @@ import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.enums.OrderStatus;
+import com.senior.assessment.domain.querydsl.OrderDslPredicate;
+import com.senior.assessment.domain.querydsl.search.OrderSearch;
 import com.senior.assessment.domain.repository.ItemRepository;
 import com.senior.assessment.domain.repository.OrderRepository;
 import com.senior.assessment.infrastructure.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -155,5 +159,9 @@ public class OrderService {
                     .httpStatus(HttpStatus.NOT_FOUND)
                     .message(String.format("Cannot found order with id %s.", orderId))
                     .build();
+    }
+
+    public Page<Order> getAllOrder(OrderSearch orderSearch, Pageable pagination) {
+        return orderRepository.findAll(OrderDslPredicate.expression(orderSearch), pagination);
     }
 }

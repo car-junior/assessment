@@ -1,9 +1,13 @@
 package com.senior.assessment.rest;
 
 import com.senior.assessment.config.mapper.ModelMapperService;
+import com.senior.assessment.domain.dto.PageResult;
 import com.senior.assessment.domain.dto.order.OrderDetailDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderCreateUpdateDto;
 import com.senior.assessment.domain.entity.Order;
+import com.senior.assessment.domain.enums.ItemType;
+import com.senior.assessment.domain.enums.OrderStatus;
+import com.senior.assessment.domain.querydsl.search.OrderSearch;
 import com.senior.assessment.domain.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+
+import static com.senior.assessment.utilities.Utils.createPagination;
 
 @RestController
 @RequiredArgsConstructor
@@ -46,26 +52,26 @@ public class OrderController {
         orderService.deleteOrderById(orderId);
         return ResponseEntity.noContent().build();
     }
-//
-//    @GetMapping
-//    public ResponseEntity<PageResult<ItemDetailDto>> getAllItem(
-//            @RequestParam(required = false) UUID itemId,
-//            @RequestParam(required = false) String query,
-//            @RequestParam(required = false) ItemType type,
-//            @RequestParam(required = false) ItemStatus status,
-//            @RequestParam(required = false, defaultValue = "0") int page,
-//            @RequestParam(required = false, defaultValue = "10") int itemsPerPage,
-//            @RequestParam(required = false, defaultValue = "ASC") String sort,
-//            @RequestParam(required = false, defaultValue = "id") String sortName) {
-//        var itemSearch = ItemSearch.builder()
-//                .id(itemId)
-//                .query(query)
-//                .type(type)
-//                .status(status)
-//                .build();
-//        var pagination = createPagination(page, itemsPerPage, sort, sortName);
-//        var result = itemService.getAllItem(itemSearch, pagination);
-//        return ResponseEntity.ok(modelMapperService.toPage(ItemDetailDto.class, result));
-//    }
+
+    @GetMapping
+    public ResponseEntity<PageResult<OrderDetailDto>> getAllOrder(
+            @RequestParam(required = false) UUID orderId,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) ItemType itemType,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int itemsPerPage,
+            @RequestParam(required = false, defaultValue = "ASC") String sort,
+            @RequestParam(required = false, defaultValue = "id") String sortName) {
+        var orderSearch = OrderSearch.builder()
+                .id(orderId)
+                .query(query)
+                .status(status)
+                .itemType(itemType)
+                .build();
+        var pagination = createPagination(page, itemsPerPage, sort, sortName);
+        var result = orderService.getAllOrder(orderSearch, pagination);
+        return ResponseEntity.ok(modelMapperService.toPage(OrderDetailDto.class, result));
+    }
 
 }
