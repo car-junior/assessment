@@ -12,6 +12,8 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 public class OrderItemDto {
+    private UUID id;
+
     @NotNull
     private ItemDto item;
 

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -83,7 +82,7 @@ public class OrderService {
 
     private void assertCanApplyDiscount(Order order) {
         assertOrderIsOpen(order);
-        assertContainsItemProduct(order);
+        hasDiscountAndContainsProductItem(order);
     }
 
     private void assertExistsAllItems(Set<UUID> itemsIds, Set<Item> items) {
@@ -127,19 +126,21 @@ public class OrderService {
                     .build();
     }
 
-    private void assertContainsItemProduct(Order order) {
-        var notContainsItemProduct = order.getOrderItems().stream()
-                .filter(orderItem -> orderItem.getItem().getType() == ItemType.PRODUCT)
-                .findAny()
-                .isEmpty();
+    private void hasDiscountAndContainsProductItem(Order order) {
+        if (order.getDiscount() > 0D) {
+            var notContainsItemProduct = order.getOrderItems().stream()
+                    .filter(orderItem -> orderItem.getItem().getType() == ItemType.PRODUCT)
+                    .findAny()
+                    .isEmpty();
 
-        if (notContainsItemProduct)
-            throw CustomException.builder()
-                    .httpStatus(HttpStatus.NOT_FOUND)
-                    .message(String.format(
-                            "Cannot apply discount in order because not contain item %s.",
-                            ItemType.PRODUCT)
-                    ).build();
+            if (notContainsItemProduct)
+                throw CustomException.builder()
+                        .httpStatus(HttpStatus.NOT_FOUND)
+                        .message(String.format(
+                                "Cannot apply discount in order because not contain item %s.",
+                                ItemType.PRODUCT)
+                        ).build();
+        }
     }
 
     private void assertExistsOrderById(UUID orderId) {
