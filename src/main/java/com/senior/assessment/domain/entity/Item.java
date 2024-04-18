@@ -41,9 +41,6 @@ public class Item extends Auditable {
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "item", fetch = FetchType.LAZY)
-    private List<OrderItem> orderItems = new ArrayList<>();
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

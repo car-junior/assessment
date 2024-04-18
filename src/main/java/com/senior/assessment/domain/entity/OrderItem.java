@@ -3,7 +3,6 @@ package com.senior.assessment.domain.entity;
 import com.senior.assessment.config.audit.Auditable;
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Objects;

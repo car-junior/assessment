@@ -1,7 +1,6 @@
 package com.senior.assessment.domain.querydsl;
 
 import com.querydsl.core.types.Predicate;
-import com.querydsl.core.types.dsl.BooleanExpression;
 import com.senior.assessment.domain.entity.QItem;
 import com.senior.assessment.domain.querydsl.search.ItemSearch;
 
