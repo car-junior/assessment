@@ -4,7 +4,7 @@ import com.querydsl.core.types.Predicate;
 import com.senior.assessment.domain.entity.QItem;
 import com.senior.assessment.domain.querydsl.search.ItemSearch;
 
-import static com.senior.assessment.utilities.Utils.isPresent;
+import static com.senior.assessment.utilities.Utils.*;
 
 public class ItemDslPredicate {
 
@@ -14,9 +14,10 @@ public class ItemDslPredicate {
         var qItem = QItem.item;
         var predicate = qItem.id.isNotNull();
 
-        //TODO: Depois retirar acentuação
-        if (isPresent(itemSearch.query()))
-            predicate = predicate.and(qItem.name.likeIgnoreCase("%" + itemSearch.query() + "%"));
+        if (isPresent(itemSearch.query())) {
+            var query = "%" + unaccented(itemSearch.query()) + "%";
+            predicate = predicate.and(unaccentedExpression(qItem.name).likeIgnoreCase(query));
+        }
 
         if (isPresent(itemSearch.id()))
             predicate = predicate.and(qItem.id.eq(itemSearch.id()));
