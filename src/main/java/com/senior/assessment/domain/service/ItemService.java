@@ -29,10 +29,10 @@ public class ItemService {
     }
 
     @Transactional
-    public Item updateItem(UUID itemId, Item updateItem) {
+    public Item updateItem(UUID itemId, Item updatedItem) {
         var item = getItemById(itemId);
-        assertNotExistsItemByNameAndTypeAndIdNot(updateItem.getName(), updateItem.getType(), item.getId());
-        updateValues(item, updateItem);
+        assertNotExistsItemByNameAndTypeAndIdNot(updatedItem.getName(), updatedItem.getType(), item.getId());
+        updateValues(item, updatedItem);
         return itemRepository.save(item);
     }
 
@@ -58,11 +58,11 @@ public class ItemService {
 
     // privates methods
 
-    private void updateValues(Item item, Item updateItem) {
-        item.setName(updateItem.getName());
-        item.setType(updateItem.getType());
-        item.setPrice(updateItem.getPrice());
-        item.setStatus(updateItem.getStatus());
+    private void updateValues(Item item, Item updatedItem) {
+        item.setName(updatedItem.getName());
+        item.setType(updatedItem.getType());
+        item.setPrice(updatedItem.getPrice());
+        item.setStatus(updatedItem.getStatus());
     }
 
     private void assertExistsItemById(UUID itemId) {
