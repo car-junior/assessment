@@ -31,15 +31,21 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Order order) {
-        return validationAndSave(order);
+        updateItemsToOrder(order);
+        setOrderAndPriceToOrderItems(order);
+        assertOrderMayHaveDiscount(order);
+        return orderRepository.save(order);
     }
 
     @Transactional
     public Order updateOrder(UUID orderId, Order updateOrder) {
         var order = getOrderById(orderId);
         assertOrderIsOpen(order, String.format("Cannot edit order because is %s.", OrderStatus.CLOSED));
-        updateOrder.setId(order.getId());
-        return validationAndSave(updateOrder);
+        updateValues(order, updateOrder);
+        updateItemsToOrder(order);
+        setOrderAndPriceToOrderItems(order);
+        assertOrderMayHaveDiscount(order);
+        return orderRepository.save(order);
     }
 
     @Transactional
@@ -70,16 +76,13 @@ public class OrderService {
     }
 
     // private methods
-
-    private Order validationAndSave(Order order) {
-        var items = getItemsByIds(extractItemIds(order));
-        updateItemsInOrderItems(order, items);
-        setOrderAndPriceForOrderItems(order);
-        assertCanApplyDiscount(order);
-        return orderRepository.save(order);
+    private void updateValues(Order order, Order updateOrder) {
+        order.setDiscount(updateOrder.getDiscount());
+        order.getOrderItems().clear();
+        order.getOrderItems().addAll(updateOrder.getOrderItems());
     }
 
-    private void setOrderAndPriceForOrderItems(Order order) {
+    private void setOrderAndPriceToOrderItems(Order order) {
         order.getOrderItems()
                 .forEach(orderItem -> {
                     orderItem.setOrder(order);
@@ -87,7 +90,8 @@ public class OrderService {
                 });
     }
 
-    private void updateItemsInOrderItems(Order order, Set<Item> items) {
+    private void updateItemsToOrder(Order order) {
+        var items = getItemsByIds(extractItemIds(order));
         var itemsMap = new HashMap<UUID, Item>();
         items.forEach(item -> itemsMap.put(item.getId(), item));
         order.getOrderItems().forEach(orderItem -> orderItem.setItem(itemsMap.get(orderItem.getItem().getId())));
@@ -106,8 +110,11 @@ public class OrderService {
         return items;
     }
 
-    private void assertCanApplyDiscount(Order order) {
-        hasDiscountAndContainsProductItem(order);
+    private void assertOrderMayHaveDiscount(Order order) {
+        if (order.getDiscount() > 0D) {
+            assertOrderNotHaveTypeItemsNull(order);
+            assertOrderHaveProductItem(order);
+        }
     }
 
     private void assertExistsAllItems(Set<UUID> itemsIds, Set<Item> items) {
@@ -151,28 +158,29 @@ public class OrderService {
                     .build();
     }
 
-    private void hasDiscountAndContainsProductItem(Order order) {
-        if (order.getDiscount() > 0D) {
-            var notContainsItemProduct = order.getOrderItems().stream()
-                    .filter(orderItem -> orderItem.getItem().getType() == ItemType.PRODUCT)
-                    .findAny()
-                    .isEmpty();
+    private void assertOrderHaveProductItem(Order order) {
+        var notContainsProductItem = order.getOrderItems().stream()
+                .filter(orderItem -> orderItem.getItem().getType() == ItemType.PRODUCT)
+                .findAny()
+                .isEmpty();
 
-            if (notContainsItemProduct)
-                throw CustomException.builder()
-                        .httpStatus(HttpStatus.NOT_FOUND)
-                        .message(String.format(
-                                "Cannot apply discount in order because not contain item %s.",
-                                ItemType.PRODUCT)
-                        ).build();
-        }
-    }
-
-    private void assertExistsOrderById(UUID orderId) {
-        if (!orderRepository.existsOrderById(orderId))
+        if (notContainsProductItem)
             throw CustomException.builder()
                     .httpStatus(HttpStatus.NOT_FOUND)
-                    .message(String.format("Cannot found order with id %s.", orderId))
+                    .message(String.format(
+                            "Cannot apply discount in order because not contain item %s.",
+                            ItemType.PRODUCT)
+                    ).build();
+    }
+
+    private void assertOrderNotHaveTypeItemsNull(Order order) {
+        var haveTypeItemNull = order.getOrderItems().stream()
+                .anyMatch(orderItem -> orderItem.getItem().getType() == null);
+
+        if (haveTypeItemNull)
+            throw CustomException.builder()
+                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .message("Contains items with null types, it is mandatory that all items have a type.")
                     .build();
     }
 
