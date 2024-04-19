@@ -154,7 +154,7 @@ public class OrderService {
     private Set<Item> getItems(Set<UUID> itemsIds) {
         var items = itemRepository.getAllByIdIn(itemsIds);
         assertExistsAllItems(itemsIds, items);
-        assertAllItemsIsActive(items);
+        assertAllProductsItemsAreActive(items);
         return items;
     }
 
@@ -190,18 +190,18 @@ public class OrderService {
                     .build();
     }
 
-    private void assertAllItemsIsActive(Set<Item> items) {
-        var itemIdsDisabled = items.stream()
-                .filter(item -> item.getStatus() == ItemStatus.DISABLED)
+    private void assertAllProductsItemsAreActive(Set<Item> items) {
+        var productsItemsDisabled = items.stream()
+                .filter(item -> item.getType() == ItemType.PRODUCT && item.getStatus() == ItemStatus.DISABLED)
                 .map(Item::getId)
                 .collect(Collectors.toSet());
 
-        if (!itemIdsDisabled.isEmpty())
+        if (!productsItemsDisabled.isEmpty())
             throw CustomException.builder()
                     .httpStatus(HttpStatus.NOT_FOUND)
                     .message(String.format(
-                                    "Cannot add items: %s to order because are %s.",
-                                    itemIdsDisabled,
+                                    "Cannot add products items: %s to order because are %s.",
+                                    productsItemsDisabled,
                                     ItemStatus.DISABLED
                             )
                     ).build();
