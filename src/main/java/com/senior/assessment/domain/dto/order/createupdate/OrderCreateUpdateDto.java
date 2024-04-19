@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -21,5 +21,5 @@ public class OrderCreateUpdateDto {
     @Valid
     @NotNull
     @Size(min = 1, message = "Required min one items.")
-    private List<OrderItemDto> orderItems;
+    private Set<OrderItemDto> orderItems;
 }

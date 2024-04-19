@@ -8,7 +8,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,10 +19,6 @@ public class OrderDetailDetailDto {
     private double discount;
     private OrderStatus status;
     private List<OrderItemDetailDetailDto> orderItems;
-
-    private LocalDateTime createdDate;
-
-    private LocalDateTime lastModifiedDate;
     public BigDecimal getTotalService() {
         return calculateTotal(ItemType.SERVICE)
                 .setScale(2, RoundingMode.HALF_UP);
