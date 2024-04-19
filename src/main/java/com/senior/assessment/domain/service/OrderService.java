@@ -87,7 +87,7 @@ public class OrderService {
     private void prepareOrder(Order order) {
         updateItemsToOrderItems(order.getOrderItems());
         setOrderToOrderItems(order);
-        setItemPriceToOrderItems(order.getOrderItems());
+        setItemPriceToNewOrderItems(order.getOrderItems());
         setOrderItemsIdNullWhenOrderIdIsNull(order);
         assertOrderMayHaveDiscount(order);
     }
@@ -96,7 +96,7 @@ public class OrderService {
         updatedOrder.setId(orderId);
         updateOrderItemsToOrder(updatedOrder);
         updateItemsToOrderItems(updatedOrder.getOrderItems());
-        setItemPriceToOrderItems(updatedOrder.getOrderItems());
+        setItemPriceToNewOrderItems(updatedOrder.getOrderItems());
         assertOrderMayHaveDiscount(updatedOrder);
     }
 
@@ -104,8 +104,10 @@ public class OrderService {
         order.getOrderItems().forEach(orderItem -> orderItem.setOrder(order));
     }
 
-    private void setItemPriceToOrderItems(List<OrderItem> orderItems) {
-        orderItems.forEach(orderItem -> orderItem.setItemPrice(orderItem.getItem().getPrice()));
+    private void setItemPriceToNewOrderItems(List<OrderItem> orderItems) {
+        orderItems.stream()
+                .filter(orderItem -> orderItem.getId() == null)
+                .forEach(orderItem -> orderItem.setItemPrice(orderItem.getItem().getPrice()));
     }
 
     private void setOrderItemsIdNullWhenOrderIdIsNull(Order order) {
@@ -256,5 +258,4 @@ public class OrderService {
                     .message(String.format("Cannot found order items: [%s].", missingOrderItemsIds))
                     .build();
     }
-
 }
