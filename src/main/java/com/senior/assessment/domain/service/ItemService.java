@@ -20,7 +20,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ItemService {
     private final ItemRepository itemRepository;
+    private final ItemDslPredicate itemDslPredicate;
     private final OrderItemRepository orderItemRepository;
+
 
     @Transactional
     public Item createItem(Item item) {
@@ -53,7 +55,7 @@ public class ItemService {
     }
 
     public Page<Item> getAllItem(ItemSearch itemSearch, Pageable pagination) {
-        return itemRepository.findAll(ItemDslPredicate.expression(itemSearch), pagination);
+        return itemRepository.findAll(itemDslPredicate.expression(itemSearch), pagination);
     }
 
     // privates methods

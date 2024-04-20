@@ -1,11 +1,15 @@
 package com.senior.assessment.domain.service;
 
+import com.querydsl.core.types.Predicate;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
+import com.senior.assessment.domain.querydsl.ItemDslPredicate;
+import com.senior.assessment.domain.querydsl.search.ItemSearch;
 import com.senior.assessment.domain.repository.ItemRepository;
 import com.senior.assessment.domain.repository.OrderItemRepository;
 import com.senior.assessment.infrastructure.exception.CustomException;
+import com.senior.assessment.utilities.Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,14 +17,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -29,6 +38,9 @@ import static org.mockito.Mockito.*;
 class ItemServiceTest {
     @Mock
     private ItemRepository itemRepository;
+
+    @Mock
+    private ItemDslPredicate itemDslPredicate;
 
     @Mock
     private OrderItemRepository orderItemRepository;
@@ -250,5 +262,36 @@ class ItemServiceTest {
         verify(itemRepository, never()).deleteById(itemId);
         assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
         assertEquals("Cannot delete item because have linked order.", customException.getMessage());
+    }
+
+    @Test
+    void testGivenItemSearchAndPagination_whenGetAllItem_thenReturnFoundItemPage() {
+        // Given / Arrange
+        var pagination = PageRequest.of(0, 1);
+        var items = List.of(
+                Item.builder()
+                        .name("Ryzen 7")
+                        .type(ItemType.PRODUCT)
+                        .price(BigDecimal.valueOf(500.00))
+                        .build(),
+                Item.builder()
+                        .name("Formatar Computador")
+                        .type(ItemType.SERVICE)
+                        .price(BigDecimal.valueOf(100.00))
+                        .build()
+        );
+        var itemPage = new PageImpl<>(items, pagination, items.size());
+        when(itemDslPredicate.expression(any(ItemSearch.class))).thenReturn(mock(Predicate.class));
+        when(itemRepository.findAll(any(Predicate.class), any(Pageable.class))).thenReturn(itemPage);
+
+        // When / Act
+        var foundItemPage = itemService.getAllItem(mock(ItemSearch.class), mock(Pageable.class));
+
+        // Then / Assert
+        assertNotNull(foundItemPage);
+        assertEquals(2, foundItemPage.getTotalPages());
+        assertEquals(2, foundItemPage.getTotalElements());
+        assertEquals("Ryzen 7", foundItemPage.getContent().get(0).getName());
+        assertEquals("Formatar Computador", foundItemPage.getContent().get(1).getName());
     }
 }
