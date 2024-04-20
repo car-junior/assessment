@@ -113,4 +113,34 @@ class ItemServiceTest {
         assertEquals(serviceItem.getPrice(), updatedItem.getPrice());
         assertEquals(serviceItem.getStatus(), updatedItem.getStatus());
     }
+
+    @Test
+    void testGivenExistingItemName_whenUpdateItem_thenThrowsCustomException() {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        originalItem.setId(itemId);
+        var serviceItem = Item.builder()
+                .name("Adm. Redes")
+                .type(ItemType.SERVICE)
+                .status(ItemStatus.DISABLED)
+                .price(BigDecimal.valueOf(100.00))
+                .build();
+
+        given(itemRepository.findById(any(UUID.class))).willReturn(Optional.of(originalItem));
+        given(itemRepository.existsItemByNameAndTypeAndIdNot(anyString(), any(ItemType.class), any(UUID.class)))
+                .willReturn(true);
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> itemService.updateItem(itemId, serviceItem)
+        );
+
+        // Then / Assert
+        verify(itemRepository, never()).save(originalItem);
+        assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
+        assertEquals(
+                String.format("Already item with this name: %s, itemType: %s.", serviceItem.getName(), serviceItem.getType()),
+                customException.getMessage()
+        );
+    }
 }
