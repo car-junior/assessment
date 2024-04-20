@@ -171,4 +171,19 @@ class ItemServiceTest {
                 customException.getMessage()
         );
     }
+
+    @Test
+    void testGivenItemId_whenGetItemById_thenReturnFoundItem() {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        given(itemRepository.findById(any(UUID.class))).willReturn(Optional.of(originalItem));
+
+        // When / Act
+        var foundItem = itemService.getItemById(itemId);
+
+        // Then / Assert
+        assertNotNull(foundItem);
+        assertEquals("Ebook", foundItem.getName());
+        assertEquals(ItemType.PRODUCT, foundItem.getType());
+    }
 }
