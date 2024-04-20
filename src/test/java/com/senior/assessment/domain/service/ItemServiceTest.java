@@ -203,4 +203,18 @@ class ItemServiceTest {
                 customException.getMessage()
         );
     }
+
+    @Test
+    void testGivenItemId_whenDeleteItemById_thenReturnNothing() {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        given(itemRepository.existsItemById(any(UUID.class))).willReturn(true);
+        given(orderItemRepository.existsOrderItemByItemId(any(UUID.class))).willReturn(false);
+
+        // When / Act
+        itemService.deleteItemById(itemId);
+
+        // Then / Assert
+        verify(itemRepository, times(1)).deleteById(itemId);
+    }
 }
