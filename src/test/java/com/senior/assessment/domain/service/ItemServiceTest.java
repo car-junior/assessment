@@ -1,6 +1,7 @@
 package com.senior.assessment.domain.service;
 
 import com.senior.assessment.domain.entity.Item;
+import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.repository.ItemRepository;
 import com.senior.assessment.domain.repository.OrderItemRepository;
@@ -15,6 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -57,7 +60,6 @@ class ItemServiceTest {
         var savedItem = itemService.createItem(item);
 
         // Then / Assert
-
         verify(itemRepository, times(1)).save(item);
         assertNotNull(savedItem);
     }
@@ -78,5 +80,34 @@ class ItemServiceTest {
                 String.format("Already item with this name: %s, itemType: %s.", item.getName(), item.getType()),
                 customException.getMessage()
         );
+    }
+
+    @Test
+    void testGivenItem_whenUpdateItem_thenReturnUpdatedItem() {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        item.setId(itemId);
+        var serviceItem = Item.builder()
+                .name("Adm. Redes")
+                .type(ItemType.SERVICE)
+                .status(ItemStatus.DISABLED)
+                .price(BigDecimal.valueOf(100.00))
+                .build();
+
+        given(itemRepository.findById(any(UUID.class))).willReturn(Optional.of(item));
+        given(itemRepository.existsItemByNameAndTypeAndIdNot(anyString(), any(ItemType.class), any(UUID.class)))
+                .willReturn(false);
+        given(itemRepository.save(item)).willReturn(item);
+
+        // When / Act
+        var updatedItem = itemService.updateItem(itemId, serviceItem);
+
+        // Then / Assert
+        verify(itemRepository, times(1)).save(item);
+        assertNotNull(updatedItem);
+        assertEquals(serviceItem.getName(), updatedItem.getName());
+        assertEquals(serviceItem.getType(), updatedItem.getType());
+        assertEquals(serviceItem.getPrice(), updatedItem.getPrice());
+        assertEquals(serviceItem.getStatus(), updatedItem.getStatus());
     }
 }
