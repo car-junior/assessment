@@ -217,4 +217,22 @@ class ItemServiceTest {
         // Then / Assert
         verify(itemRepository, times(1)).deleteById(itemId);
     }
+
+    @Test
+    void testGivenNonExistingItemId_whenDeleteItemById_thenThrowsCustomException() {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        given(itemRepository.existsItemById(any(UUID.class))).willReturn(false);
+
+        // When / Act
+        var customException = assertThrows(CustomException.class, () -> itemService.deleteItemById(itemId));
+
+        // Then / Assert
+        verify(itemRepository, never()).deleteById(itemId);
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(
+                String.format("Cannot found item with id %s.", itemId),
+                customException.getMessage()
+        );
+    }
 }
