@@ -235,4 +235,20 @@ class ItemServiceTest {
                 customException.getMessage()
         );
     }
+
+    @Test
+    void testGivenItemIdLinkedWithOrders_whenDeleteItemById_thenThrowsCustomException() {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        given(itemRepository.existsItemById(any(UUID.class))).willReturn(true);
+        given(orderItemRepository.existsOrderItemByItemId(any(UUID.class))).willReturn(true);
+
+        // When / Act
+        var customException = assertThrows(CustomException.class, () -> itemService.deleteItemById(itemId));
+
+        // Then / Assert
+        verify(itemRepository, never()).deleteById(itemId);
+        assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
+        assertEquals("Cannot delete item because have linked order.", customException.getMessage());
+    }
 }
