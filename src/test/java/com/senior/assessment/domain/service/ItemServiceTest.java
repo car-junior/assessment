@@ -186,4 +186,21 @@ class ItemServiceTest {
         assertEquals("Ebook", foundItem.getName());
         assertEquals(ItemType.PRODUCT, foundItem.getType());
     }
+
+    @Test
+    void testGivenNonExistsItemId_whenGetItemById_thenThrowsCustomException() {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        given(itemRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+
+        // When / Act
+        var customException = assertThrows(CustomException.class, () -> itemService.getItemById(itemId));
+
+        // Then / Assert
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(
+                String.format("Cannot found item with id %s.", itemId),
+                customException.getMessage()
+        );
+    }
 }
