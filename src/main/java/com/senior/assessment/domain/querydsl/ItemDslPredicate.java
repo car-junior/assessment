@@ -3,14 +3,14 @@ package com.senior.assessment.domain.querydsl;
 import com.querydsl.core.types.Predicate;
 import com.senior.assessment.domain.entity.QItem;
 import com.senior.assessment.domain.querydsl.search.ItemSearch;
+import org.springframework.stereotype.Component;
 
 import static com.senior.assessment.utilities.Utils.*;
 
+@Component
 public class ItemDslPredicate {
 
-    private ItemDslPredicate() {}
-
-    public static Predicate expression(ItemSearch itemSearch) {
+    public Predicate expression(ItemSearch itemSearch) {
         var qItem = QItem.item;
         var predicate = qItem.id.isNotNull();
 
