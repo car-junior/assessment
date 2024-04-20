@@ -143,4 +143,32 @@ class ItemServiceTest {
                 customException.getMessage()
         );
     }
+
+    @Test
+    void testGivenNonExistsItem_whenUpdateItem_thenThrowsCustomException() {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        originalItem.setId(itemId);
+        var serviceItem = Item.builder()
+                .name("Adm. Redes")
+                .type(ItemType.SERVICE)
+                .status(ItemStatus.DISABLED)
+                .price(BigDecimal.valueOf(100.00))
+                .build();
+
+        given(itemRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> itemService.updateItem(itemId, serviceItem)
+        );
+
+        // Then / Assert
+        verify(itemRepository, never()).save(originalItem);
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(
+                String.format("Cannot found item with id %s.", itemId),
+                customException.getMessage()
+        );
+    }
 }
