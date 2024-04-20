@@ -36,12 +36,11 @@ class ItemServiceTest {
     @InjectMocks
     private ItemService itemService;
 
-    private Item item;
-
+    private Item originalItem;
 
     @BeforeEach
     public void setup() {
-        item = Item.builder()
+        originalItem = Item.builder()
                 .name("Ebook")
                 .type(ItemType.PRODUCT)
                 .price(BigDecimal.valueOf(10.00))
@@ -54,14 +53,18 @@ class ItemServiceTest {
         given(itemRepository.existsItemByNameAndType(anyString(), any(ItemType.class)))
                 .willReturn(false);
 
-        given(itemRepository.save(item)).willReturn(item);
+        given(itemRepository.save(originalItem)).willReturn(originalItem);
 
         // When / Act
-        var savedItem = itemService.createItem(item);
+        var savedItem = itemService.createItem(originalItem);
 
         // Then / Assert
-        verify(itemRepository, times(1)).save(item);
+        verify(itemRepository, times(1)).save(originalItem);
         assertNotNull(savedItem);
+        assertEquals("Ebook", savedItem.getName());
+        assertEquals(ItemType.PRODUCT, savedItem.getType());
+        assertEquals(ItemStatus.ACTIVE, savedItem.getStatus());
+        assertEquals(BigDecimal.valueOf(10.00), savedItem.getPrice());
     }
 
     @Test
@@ -71,13 +74,13 @@ class ItemServiceTest {
                 .willReturn(true);
 
         // When / Act
-        var customException = assertThrows(CustomException.class, () -> itemService.createItem(item));
+        var customException = assertThrows(CustomException.class, () -> itemService.createItem(originalItem));
 
         // Then / Assert
-        verify(itemRepository, never()).save(item);
+        verify(itemRepository, never()).save(originalItem);
         assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
         assertEquals(
-                String.format("Already item with this name: %s, itemType: %s.", item.getName(), item.getType()),
+                String.format("Already item with this name: %s, itemType: %s.", originalItem.getName(), originalItem.getType()),
                 customException.getMessage()
         );
     }
@@ -86,7 +89,7 @@ class ItemServiceTest {
     void testGivenItem_whenUpdateItem_thenReturnUpdatedItem() {
         // Given / Arrange
         var itemId = UUID.randomUUID();
-        item.setId(itemId);
+        originalItem.setId(itemId);
         var serviceItem = Item.builder()
                 .name("Adm. Redes")
                 .type(ItemType.SERVICE)
@@ -94,16 +97,16 @@ class ItemServiceTest {
                 .price(BigDecimal.valueOf(100.00))
                 .build();
 
-        given(itemRepository.findById(any(UUID.class))).willReturn(Optional.of(item));
+        given(itemRepository.findById(any(UUID.class))).willReturn(Optional.of(originalItem));
         given(itemRepository.existsItemByNameAndTypeAndIdNot(anyString(), any(ItemType.class), any(UUID.class)))
                 .willReturn(false);
-        given(itemRepository.save(item)).willReturn(item);
+        given(itemRepository.save(originalItem)).willReturn(originalItem);
 
         // When / Act
         var updatedItem = itemService.updateItem(itemId, serviceItem);
 
         // Then / Assert
-        verify(itemRepository, times(1)).save(item);
+        verify(itemRepository, times(1)).save(originalItem);
         assertNotNull(updatedItem);
         assertEquals(serviceItem.getName(), updatedItem.getName());
         assertEquals(serviceItem.getType(), updatedItem.getType());
