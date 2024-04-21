@@ -166,6 +166,38 @@ public class ItemControllerTest {
     }
 
     @Test
+    void testGivenNonExistsItemId_whenUpdateItem_thenReturn404AndCustomException() throws Exception {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        var itemUpdateDto = ItemCreateUpdateDto.builder()
+                .name("Monitor")
+                .type(ItemType.PRODUCT)
+                .status(ItemStatus.DISABLED)
+                .price(BigDecimal.valueOf(100.00))
+                .build();
+        var item = modelMapper.map(itemUpdateDto, Item.class);
+
+        given(modelMapperService.toObject(eq(Item.class), any(ItemCreateUpdateDto.class)))
+                .willReturn(item);
+        given(itemService.updateItem(any(UUID.class), any(Item.class)))
+                .willThrow(CustomException.builder()
+                        .httpStatus(HttpStatus.NOT_FOUND)
+                        .message(String.format("Cannot found item with id %s.", itemId))
+                        .build());
+
+        // When / Act
+        var response = mockMvc.perform(put("/items/{itemId}", itemId)
+                .content(objectMapper.writeValueAsString(itemUpdateDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        response.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value(404))
+                .andExpect(jsonPath("$.message").value(String.format("Cannot found item with id %s.", itemId)));
+    }
+
+    @Test
     void testGivenItemId_whenGetItemById_thenReturn200AndItemDetailDto() throws Exception {
         // Given / Arrange
         var itemId = UUID.randomUUID();
