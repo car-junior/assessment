@@ -22,7 +22,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -264,7 +267,6 @@ class ItemServiceTest {
     @Test
     void testGivenItemSearchAndPagination_whenGetAllItem_thenReturnFoundItemPage() {
         // Given / Arrange
-        var pagination = PageRequest.of(0, 1);
         var items = List.of(
                 Item.builder()
                         .name("Ryzen 7")
@@ -277,7 +279,7 @@ class ItemServiceTest {
                         .price(BigDecimal.valueOf(100.00))
                         .build()
         );
-        var itemPage = new PageImpl<>(items, pagination, items.size());
+        var itemPage = new PageImpl<>(items, PageRequest.of(0, 10), items.size());
 
         when(itemDslPredicate.expression(any(ItemSearch.class))).thenReturn(mock(Predicate.class));
         when(itemRepository.findAll(any(Predicate.class), any(Pageable.class))).thenReturn(itemPage);
@@ -287,7 +289,7 @@ class ItemServiceTest {
 
         // Then / Assert
         assertNotNull(foundItemPage);
-        assertEquals(2, foundItemPage.getTotalPages());
+        assertEquals(1, foundItemPage.getTotalPages());
         assertEquals(2, foundItemPage.getTotalElements());
         assertEquals("Ryzen 7", foundItemPage.getContent().get(0).getName());
         assertEquals("Formatar Computador", foundItemPage.getContent().get(1).getName());
@@ -296,15 +298,13 @@ class ItemServiceTest {
     @Test
     void testGivenItemSearchAndPagination_whenGetAllItem_thenReturnEmptyItemPage() {
         // Given / Arrange
-        var pagination = PageRequest.of(0, 1);
-        List<Item> items = Collections.emptyList();
-        var itemPage = new PageImpl<>(items, pagination, 0);
+        var itemPage = new PageImpl<Item>(Collections.emptyList(), PageRequest.of(0, 10), 0);
 
         when(itemDslPredicate.expression(any(ItemSearch.class))).thenReturn(mock(Predicate.class));
         when(itemRepository.findAll(any(Predicate.class), any(Pageable.class))).thenReturn(itemPage);
 
         // When / Act
-        var foundItemPage = itemService.getAllItem(mock(ItemSearch.class), mock(Pageable.class));
+        var foundItemPage = itemService.getAllItem(any(ItemSearch.class), any(Pageable.class));
 
         // Then / Assert
         assertNotNull(foundItemPage);

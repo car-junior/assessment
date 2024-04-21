@@ -3,11 +3,13 @@ package com.senior.assessment.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senior.assessment.config.mapper.ModelMapperService;
 import com.senior.assessment.domain.config.AssessmentConfigTest;
+import com.senior.assessment.domain.dto.PageResult;
 import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
 import com.senior.assessment.domain.dto.item.ItemDetailDto;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
+import com.senior.assessment.domain.querydsl.search.ItemSearch;
 import com.senior.assessment.domain.service.ItemService;
 import com.senior.assessment.infrastructure.GlobalExceptionHandler;
 import com.senior.assessment.infrastructure.exception.CustomException;
@@ -18,12 +20,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -184,5 +191,73 @@ public class ItemControllerTest {
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.message").value(String.format("Cannot found item with id %s.", itemId)));
+    }
+
+    @Test
+    void testGivenItemSearchAndPagination_whenGetAllItem_thenReturn200AndPageResult() throws Exception {
+        // Given / Arrange
+        var items = createItems();
+        var page = createPage(items);
+        var pageResult = createPageResult(page);
+
+        given(itemService.getAllItem(any(ItemSearch.class), any(PageRequest.class)))
+                .willReturn(page);
+        given(modelMapperService.toPage(eq(ItemDetailDto.class), any(Page.class)))
+                .willReturn(pageResult);
+
+        // When / Act
+        var response = mockMvc.perform(get("/items"));
+
+        //Then / Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.totalResults").value(2))
+                .andExpect(jsonPath("$.result").isNotEmpty());
+    }
+
+    @Test
+    void testGivenItemSearchAndPagination_whenGetAllItem_thenReturn200AndEmptyPageResult() throws Exception {
+        // Given / Arrange
+        var itemPage = new PageImpl<Item>(Collections.emptyList(), PageRequest.of(0, 10), 0);
+
+        given(itemService.getAllItem(any(ItemSearch.class), any(PageRequest.class)))
+                .willReturn(itemPage);
+        given(modelMapperService.toPage(eq(ItemDetailDto.class), any(Page.class)))
+                .willReturn(new PageResult<>(0, 0, Collections.emptyList()));
+
+        // When / Act
+        var response = mockMvc.perform(get("/items"));
+
+        // Then / Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPages").value(0))
+                .andExpect(jsonPath("$.totalResults").value(0))
+                .andExpect(jsonPath("$.result").isEmpty());
+    }
+
+    private List<Item> createItems() {
+        return List.of(Item.builder()
+                        .name("Ryzen 7")
+                        .type(ItemType.PRODUCT)
+                        .price(BigDecimal.valueOf(500.00))
+                        .build(),
+                Item.builder()
+                        .name("Formatar Computador")
+                        .type(ItemType.SERVICE)
+                        .price(BigDecimal.valueOf(100.00))
+                        .build()
+        );
+    }
+
+    private Page<Item> createPage(List<Item> items) {
+        return new PageImpl<>(items, PageRequest.of(0, 10), items.size());
+    }
+
+    private PageResult<ItemDetailDto> createPageResult(Page<Item> page) {
+        List<ItemDetailDto> itemsDetailDto = page.getContent()
+                .stream()
+                .map(item -> modelMapper.map(item, ItemDetailDto.class))
+                .toList();
+        return new PageResult<>(page.getTotalPages(), page.getTotalElements(), itemsDetailDto);
     }
 }
