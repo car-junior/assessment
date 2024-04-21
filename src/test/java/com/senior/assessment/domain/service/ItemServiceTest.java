@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -267,19 +268,8 @@ class ItemServiceTest {
     @Test
     void testGivenItemSearchAndPagination_whenGetAllItem_thenReturnFoundItemPage() {
         // Given / Arrange
-        var items = List.of(
-                Item.builder()
-                        .name("Ryzen 7")
-                        .type(ItemType.PRODUCT)
-                        .price(BigDecimal.valueOf(500.00))
-                        .build(),
-                Item.builder()
-                        .name("Formatar Computador")
-                        .type(ItemType.SERVICE)
-                        .price(BigDecimal.valueOf(100.00))
-                        .build()
-        );
-        var itemPage = new PageImpl<>(items, PageRequest.of(0, 10), items.size());
+        var items = createItems();
+        var itemPage = createPage(items);
 
         when(itemDslPredicate.expression(any(ItemSearch.class))).thenReturn(mock(Predicate.class));
         when(itemRepository.findAll(any(Predicate.class), any(Pageable.class))).thenReturn(itemPage);
@@ -304,11 +294,29 @@ class ItemServiceTest {
         when(itemRepository.findAll(any(Predicate.class), any(Pageable.class))).thenReturn(itemPage);
 
         // When / Act
-        var foundItemPage = itemService.getAllItem(any(ItemSearch.class), any(Pageable.class));
+        var foundItemPage = itemService.getAllItem(mock(ItemSearch.class), mock(Pageable.class));
 
         // Then / Assert
         assertNotNull(foundItemPage);
         assertEquals(0, foundItemPage.getTotalPages());
         assertEquals(0, foundItemPage.getTotalElements());
+    }
+
+    private List<Item> createItems() {
+        return List.of(Item.builder()
+                        .name("Ryzen 7")
+                        .type(ItemType.PRODUCT)
+                        .price(BigDecimal.valueOf(500.00))
+                        .build(),
+                Item.builder()
+                        .name("Formatar Computador")
+                        .type(ItemType.SERVICE)
+                        .price(BigDecimal.valueOf(100.00))
+                        .build()
+        );
+    }
+
+    private Page<Item> createPage(List<Item> items) {
+        return new PageImpl<>(items, PageRequest.of(0, 10), items.size());
     }
 }
