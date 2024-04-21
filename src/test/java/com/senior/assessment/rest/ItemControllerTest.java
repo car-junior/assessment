@@ -29,8 +29,8 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.mockito.BDDMockito.willDoNothing;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -153,5 +153,18 @@ public class ItemControllerTest {
         response.andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(404))
                 .andExpect(jsonPath("$.message").value(String.format("Cannot found item with id %s.", itemId)));
+    }
+
+    @Test
+    void testGivenItemId_whenDeleteItemById_thenReturn204() throws Exception {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        willDoNothing().given(itemService).deleteItemById(itemId);
+
+        // When / Act
+        var response = mockMvc.perform(delete("/items/{itemId}", itemId));
+
+        //Then / Assert
+        response.andExpect(status().isNoContent());
     }
 }
