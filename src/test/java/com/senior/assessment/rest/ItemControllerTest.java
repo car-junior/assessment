@@ -119,30 +119,6 @@ public class ItemControllerTest {
     }
 
     @Test
-    void testGivenItemId_whenGetItemById_thenReturn200AndItemDetailDto() throws Exception {
-        // Given / Arrange
-        var itemId = UUID.randomUUID();
-        var item = Item.builder()
-                .id(itemId)
-                .type(ItemType.SERVICE)
-                .status(ItemStatus.DISABLED)
-                .name("Formatação Computadores")
-                .price(BigDecimal.valueOf(100.00))
-                .build();
-
-        given(itemService.getItemById(any(UUID.class))).willReturn(item);
-        given(modelMapperService.toObject(eq(ItemDetailDto.class), any(Item.class)))
-                .willReturn(modelMapper.map(item, ItemDetailDto.class));
-
-        // When / Act
-        var response = mockMvc.perform(get("/items/{itemId}", itemId));
-
-        //Then / Assert
-        response.andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").exists());
-    }
-
-    @Test
     void testGivenItemCreateUpdateDto_whenUpdateItem_thenReturn200AndItemDetailDto() throws Exception {
         // Given / Arrange
         var itemId = UUID.randomUUID();
@@ -174,6 +150,44 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.name").value("Monitor"));
     }
 
+    @Test
+    void testGivenInvalidItemCreateUpdateDto_whenUpdateItem_thenReturn400AndErrors() throws Exception {
+        // Given / Arrange
+
+        // When / Act
+        var response = mockMvc.perform(put("/items/{itemId}", UUID.randomUUID())
+                .content(objectMapper.writeValueAsString(new ItemCreateUpdateDto()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.*").isNotEmpty());
+    }
+
+    @Test
+    void testGivenItemId_whenGetItemById_thenReturn200AndItemDetailDto() throws Exception {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        var item = Item.builder()
+                .id(itemId)
+                .type(ItemType.SERVICE)
+                .status(ItemStatus.DISABLED)
+                .name("Formatação Computadores")
+                .price(BigDecimal.valueOf(100.00))
+                .build();
+
+        given(itemService.getItemById(any(UUID.class))).willReturn(item);
+        given(modelMapperService.toObject(eq(ItemDetailDto.class), any(Item.class)))
+                .willReturn(modelMapper.map(item, ItemDetailDto.class));
+
+        // When / Act
+        var response = mockMvc.perform(get("/items/{itemId}", itemId));
+
+        //Then / Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists());
+    }
     @Test
     void testGivenNonExistingItemId_whenGetItemById_thenReturn400AndCustomException() throws Exception {
         // Given / Arrange
