@@ -58,6 +58,9 @@ public class ItemControllerTest {
     @Autowired
     private ModelMapper modelMapper;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeEach
     public void setup() {
         mockMvc = MockMvcBuilders.standaloneSetup(itemController)
@@ -87,10 +90,9 @@ public class ItemControllerTest {
 
         // When / Act
         var response = mockMvc.perform(post("/items")
-                .content(new ObjectMapper().writeValueAsString(itemCreateDto))
+                .content(objectMapper.writeValueAsString(itemCreateDto))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON));
-
 
         //Then / Assert
         response.andExpect(status().isOk())
@@ -107,7 +109,7 @@ public class ItemControllerTest {
 
         // When / Act
         var response = mockMvc.perform(post("/items")
-                .content(new ObjectMapper().writeValueAsString(new ItemCreateUpdateDto()))
+                .content(objectMapper.writeValueAsString(new ItemCreateUpdateDto()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON));
 
@@ -132,14 +134,44 @@ public class ItemControllerTest {
         given(modelMapperService.toObject(eq(ItemDetailDto.class), any(Item.class)))
                 .willReturn(modelMapper.map(item, ItemDetailDto.class));
 
-
         // When / Act
         var response = mockMvc.perform(get("/items/{itemId}", itemId));
-
 
         //Then / Assert
         response.andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").exists());
+    }
+
+    @Test
+    void testGivenItemCreateUpdateDto_whenUpdateItem_thenReturn200AndItemDetailDto() throws Exception {
+        // Given / Arrange
+        var itemId = UUID.randomUUID();
+        var itemUpdateDto = ItemCreateUpdateDto.builder()
+                .name("Monitor")
+                .type(ItemType.PRODUCT)
+                .status(ItemStatus.DISABLED)
+                .price(BigDecimal.valueOf(100.00))
+                .build();
+        var item = modelMapper.map(itemUpdateDto, Item.class);
+        item.setId(itemId);
+
+        given(modelMapperService.toObject(eq(Item.class), any(ItemCreateUpdateDto.class)))
+                .willReturn(item);
+        given(itemService.updateItem(any(UUID.class), any(Item.class)))
+                .willReturn(item);
+        given(modelMapperService.toObject(eq(ItemDetailDto.class), any(Item.class)))
+                .willReturn(modelMapper.map(item, ItemDetailDto.class));
+
+        // When / Act
+        var response = mockMvc.perform(put("/items/{itemId}", itemId)
+                .content(objectMapper.writeValueAsString(itemUpdateDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.name").value("Monitor"));
     }
 
     @Test

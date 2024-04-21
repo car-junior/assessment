@@ -73,5 +73,4 @@ public class ItemController {
         var result = itemService.getAllItem(itemSearch, pagination);
         return ResponseEntity.ok(modelMapperService.toPage(ItemDetailDto.class, result));
     }
-
 }
