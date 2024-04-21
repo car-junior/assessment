@@ -1,7 +1,7 @@
 package com.senior.assessment.domain.repository;
 
 import com.senior.assessment.domain.config.AssessmentConfigTest;
-import com.senior.assessment.domain.config.BaseIntegrationConfigurationTest;
+import com.senior.assessment.domain.config.RepositoryIntegrationConfig;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.enums.ItemType;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,12 +23,11 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 @Import(AssessmentConfigTest.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class ItemRepositoryTest extends BaseIntegrationConfigurationTest {
+public class ItemRepositoryTest extends RepositoryIntegrationConfig {
     private Item productItem;
     private Item serviceItem;
     @Autowired
     private ItemRepository itemRepository;
-
 
     @BeforeEach
     public void setup() {

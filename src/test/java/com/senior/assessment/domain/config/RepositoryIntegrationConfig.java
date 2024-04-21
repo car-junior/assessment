@@ -4,7 +4,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 
-public abstract class BaseIntegrationConfigurationTest {
+public abstract class RepositoryIntegrationConfig {
     @Container
     @ServiceConnection
     protected static PostgreSQLContainer<?> postgresContainer = new PostgreSQLContainer<>("postgres:15-alpine");
