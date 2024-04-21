@@ -24,14 +24,15 @@ public class ItemCreateUpdateDto {
     private ItemType type;
 
     @NotNull
+    @DecimalMin(value = "0.01")
     @Digits(integer = 10, fraction = 2)
-    @DecimalMin(value = "0.01", message = "price min is R$ 00,01.")
     private BigDecimal price;
 
     @NotNull
     private ItemStatus status;
 
     public String getName() {
-        return name.trim();
+        return (name != null) ? name.trim() : null;
     }
+
 }
