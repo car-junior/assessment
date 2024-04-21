@@ -2,6 +2,7 @@ package com.senior.assessment.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senior.assessment.config.mapper.ModelMapperService;
+import com.senior.assessment.domain.config.AssessmentConfigTest;
 import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
 import com.senior.assessment.domain.dto.item.ItemDetailDto;
 import com.senior.assessment.domain.entity.Item;
@@ -15,6 +16,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -30,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ItemController.class)
+@Import(AssessmentConfigTest.class)
 public class ItemControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -43,7 +46,8 @@ public class ItemControllerTest {
     @MockBean
     private ModelMapperService modelMapperService;
 
-    private final ModelMapper modelMapper = new ModelMapper();
+    @Autowired
+    private ModelMapper modelMapper;
 
     @BeforeEach
     public void setup() {
@@ -86,5 +90,20 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.price").value(50.00))
                 .andExpect(jsonPath("$.type").value(ItemType.PRODUCT.getCode()))
                 .andExpect(jsonPath("$.status").value(ItemStatus.ACTIVE.getCode()));
+    }
+
+    @Test
+    void testGivenInvalidItemCreateUpdateDto_whenCreateItem_thenReturn400AndErrors() throws Exception {
+        // Given / Arrange
+
+        // When / Act
+        var response = mockMvc.perform(post("/items")
+                .content(new ObjectMapper().writeValueAsString(new ItemCreateUpdateDto()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.*").isNotEmpty());
     }
 }
