@@ -3,7 +3,7 @@ package com.senior.assessment.rest;
 import com.senior.assessment.config.mapper.ModelMapperService;
 import com.senior.assessment.domain.dto.PageResult;
 import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
-import com.senior.assessment.domain.dto.item.ItemDetailDetailDto;
+import com.senior.assessment.domain.dto.item.ItemDetailDto;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
@@ -26,24 +26,24 @@ public class ItemController {
     private final ModelMapperService modelMapperService;
 
     @PostMapping
-    public ResponseEntity<ItemDetailDetailDto> create(@Valid @RequestBody ItemCreateUpdateDto itemCreate) {
+    public ResponseEntity<ItemDetailDto> create(@Valid @RequestBody ItemCreateUpdateDto itemCreate) {
         var item = itemService.createItem(modelMapperService.toObject(Item.class, itemCreate));
-        return ResponseEntity.ok(modelMapperService.toObject(ItemDetailDetailDto.class, item));
+        return ResponseEntity.ok(modelMapperService.toObject(ItemDetailDto.class, item));
     }
 
     @PutMapping("/{itemId}")
-    public ResponseEntity<ItemDetailDetailDto> update(@PathVariable(name = "itemId") UUID itemId,
-                                                      @Valid @RequestBody ItemCreateUpdateDto itemUpdate) {
+    public ResponseEntity<ItemDetailDto> update(@PathVariable(name = "itemId") UUID itemId,
+                                                @Valid @RequestBody ItemCreateUpdateDto itemUpdate) {
         var item = modelMapperService.toObject(Item.class, itemUpdate);
         return ResponseEntity.ok(
-                modelMapperService.toObject(ItemDetailDetailDto.class, itemService.updateItem(itemId, item))
+                modelMapperService.toObject(ItemDetailDto.class, itemService.updateItem(itemId, item))
         );
     }
 
     @GetMapping("/{itemId}")
-    public ResponseEntity<ItemDetailDetailDto> getById(@PathVariable(name = "itemId") UUID itemId) {
+    public ResponseEntity<ItemDetailDto> getById(@PathVariable(name = "itemId") UUID itemId) {
         return ResponseEntity.ok(
-                modelMapperService.toObject(ItemDetailDetailDto.class, itemService.getItemById(itemId))
+                modelMapperService.toObject(ItemDetailDto.class, itemService.getItemById(itemId))
         );
     }
 
@@ -54,7 +54,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public ResponseEntity<PageResult<ItemDetailDetailDto>> getAllItem(
+    public ResponseEntity<PageResult<ItemDetailDto>> getAllItem(
             @RequestParam(required = false) UUID itemId,
             @RequestParam(required = false) String query,
             @RequestParam(required = false) ItemType type,
@@ -71,7 +71,7 @@ public class ItemController {
                 .build();
         var pagination = createPagination(page, itemsPerPage, sort, sortName);
         var result = itemService.getAllItem(itemSearch, pagination);
-        return ResponseEntity.ok(modelMapperService.toPage(ItemDetailDetailDto.class, result));
+        return ResponseEntity.ok(modelMapperService.toPage(ItemDetailDto.class, result));
     }
 
 }

@@ -23,7 +23,6 @@ public class ItemService {
     private final ItemDslPredicate itemDslPredicate;
     private final OrderItemRepository orderItemRepository;
 
-
     @Transactional
     public Item createItem(Item item) {
         assertNotExistsItemByNameAndType(item.getName(), item.getType());

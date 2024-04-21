@@ -13,7 +13,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class ItemDetailDetailDto {
+public class ItemDetailDto {
     private UUID id;
     private String name;
     private ItemType type;

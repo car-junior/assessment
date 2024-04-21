@@ -14,11 +14,11 @@ import java.util.UUID;
 @Getter
 @Setter
 @NoArgsConstructor
-public class OrderDetailDetailDto {
+public class OrderDetailDto {
     private UUID id;
     private double discount;
     private OrderStatus status;
-    private List<OrderItemDetailDetailDto> orderItems;
+    private List<OrderItemDetailDto> orderItems;
     public BigDecimal getTotalService() {
         return calculateTotal(ItemType.SERVICE)
                 .setScale(2, RoundingMode.HALF_UP);
