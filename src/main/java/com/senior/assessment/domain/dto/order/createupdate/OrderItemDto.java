@@ -27,12 +27,12 @@ public class OrderItemDto {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OrderItemDto that = (OrderItemDto) o;
-        return Objects.equals(id, that.id);
+        return Objects.equals(id, that.id) && item.getId().equals(that.item.getId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(id, item.getId());
     }
 
     @Getter
