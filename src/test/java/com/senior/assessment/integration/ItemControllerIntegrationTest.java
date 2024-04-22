@@ -319,4 +319,14 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                     assertEquals(status, itemDetailDto.getStatus());
                 });
     }
+
+    @Test
+    @Order(9)
+    void testGivenItemId_whenDeleteItemById_thenReturn204NoContent() {
+        given().spec(requestSpecification)
+                .when()
+                .delete("/{itemId}", itemId)
+                .then()
+                .statusCode(204);
+    }
 }
