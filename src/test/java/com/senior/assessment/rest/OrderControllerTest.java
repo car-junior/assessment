@@ -216,6 +216,7 @@ public class OrderControllerTest {
                         .value(String.format("Cannot edit order because is %s.", OrderStatus.CLOSED)));
     }
 
+
     @Test
     void testGivenOrderId_whenDeleteOrderById_thenReturn204() throws Exception {
         // Given / Arrange
@@ -351,6 +352,71 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value(String.format("Order %s already %s.", orderId, OrderStatus.CLOSED)));
     }
+
+    @Test
+    void testGivenOrderId_whenGetOrderById_thenReturn204AndOrderDetailDto() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        var order = modelMapper.map(orderCreateUpdateDto, Order.class);
+        order.setId(orderId);
+
+        given(orderService.getOrderById(any(UUID.class))).willReturn(order);
+        given(modelMapperService.toObject(eq(OrderDetailDto.class), any(Order.class)))
+                .willReturn(getOrderDetailDto(order));
+
+        // When / Act
+        var response = mockMvc.perform(get("/orders/{orderId}", orderId));
+
+        //Then / Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.discount").value(0))
+                .andExpect(jsonPath("$.total").value(250.00))
+                .andExpect(jsonPath("$.totalService").value(200.00))
+                .andExpect(jsonPath("$.totalProduct").value(50.00))
+                .andExpect(jsonPath("$.orderItems").isNotEmpty());
+    }
+
+    @Test
+    void testGivenNonExistingOrderId_whenGetOrderById_thenReturn404AndErrorResponse() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        given(orderService.getOrderById(any(UUID.class)))
+                .willThrow(CustomException.builder()
+                        .httpStatus(HttpStatus.NOT_FOUND)
+                        .message(String.format("Cannot found order with id %s.", orderId))
+                        .build());
+
+        // When / Act
+        var errorResponse = mockMvc.perform(get("/orders/{orderId}", orderId));
+
+        //Then / Assert
+        errorResponse.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value(String.format("Cannot found order with id %s.", orderId)));
+    }
+
+//    @Test
+//    void testGivenNonExistsOrderId_whenDeleteOrderById_thenReturn404AndErrorResponse() throws Exception {
+//        // Given / Arrange
+//        var orderId = UUID.randomUUID();
+//
+//        willThrow(CustomException.builder()
+//                .httpStatus(HttpStatus.NOT_FOUND)
+//                .message(String.format("Cannot found order with id %s.", orderId))
+//                .build())
+//                .given(orderService).deleteOrderById(any(UUID.class));
+//
+//        // When / Act
+//        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
+//
+//        //Then / Assert
+//        errorResponse.andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.status").value(404))
+//                .andExpect(jsonPath("$.message")
+//                        .value(String.format("Cannot found order with id %s.", orderId)));
+//    }
 
 //    @Test
 //    void testGivenNonExistsOrderId_whenDeleteOrderById_thenReturn404AndErrorResponse() throws Exception {
