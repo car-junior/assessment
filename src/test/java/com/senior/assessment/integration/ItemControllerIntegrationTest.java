@@ -133,7 +133,7 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
 
     @Test
     @Order(4)
-    void testGivenEmptyItemSearchAndPaginationDefault_whenGetAllItem_thenReturnPageResultItemDetailDto() {
+    void testGivenEmptyItemSearchAndPaginationDefault_whenGetAllItem_thenReturn200AndPageResultItemDetailDto() {
         var newItemCreateDto = ItemCreateUpdateDto.builder()
                 .name("Teclado")
                 .type(ItemType.PRODUCT)
@@ -173,5 +173,31 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                     assertNotNull(itemDetailDto.getCreatedDate());
                     assertNotNull(itemDetailDto.getLastModifiedDate());
                 });
+    }
+
+    @Test
+    @Order(5)
+    void testGivenItemSearchQueryAndPaginationDefault_whenGetAllItem_thenReturn200AndPageResultItemDetailDto() {
+        var query = "teclado";
+        PageResult<ItemDetailDto> pageResult = given()
+                .spec(requestSpecification)
+                .param("query", query)
+                .when()
+                .get()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+        assertNotNull(pageResult);
+        assertNotNull(pageResult.getResult());
+        assertEquals(1, pageResult.getTotalPages());
+        assertEquals(1, pageResult.getTotalResults());
+        assertEquals("Teclado", pageResult.getResult().get(0).getName());
+        assertEquals(ItemType.PRODUCT, pageResult.getResult().get(0).getType());
+        assertEquals(ItemStatus.ACTIVE, pageResult.getResult().get(0).getStatus());
+        assertThat(BigDecimal.valueOf(100.00)).isEqualByComparingTo(pageResult.getResult().get(0).getPrice());
     }
 }
