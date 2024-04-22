@@ -33,8 +33,8 @@ import java.util.stream.IntStream;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -115,7 +115,6 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errors.*").isNotEmpty());
     }
-
 
     @Test
     void testGivenOrderUpdateCreateDto_whenUpdateOrder_thenReturn200AndOrderDetailDto() throws Exception {
@@ -215,6 +214,48 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message")
                         .value(String.format("Cannot edit order because is %s.", OrderStatus.CLOSED)));
+    }
+
+    @Test
+    void testGivenNonExistsOrderId_whenDeleteOrderById_thenReturn404AndErrorResponse() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        willThrow(CustomException.builder()
+                .httpStatus(HttpStatus.NOT_FOUND)
+                .message(String.format("Cannot found order with id %s.", orderId))
+                .build())
+                .given(orderService).deleteOrderById(orderId);
+
+        // When / Act
+        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
+
+        //Then / Assert
+        errorResponse.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Cannot found order with id %s.", orderId)));
+    }
+
+    @Test
+    void testGivenOrderIdClosed_whenDeleteOrderById_thenReturn400AndErrorResponse() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        willThrow(CustomException.builder()
+                .httpStatus(HttpStatus.BAD_REQUEST)
+                .message(String.format("Cannot delete order %s.", OrderStatus.CLOSED))
+                .build())
+                .given(orderService).deleteOrderById(orderId);
+
+        // When / Act
+        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
+
+        //Then / Assert
+        errorResponse.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Cannot delete order %s.", OrderStatus.CLOSED)));
     }
 
     private OrderDetailDto getOrderDetailDto(Order order) {

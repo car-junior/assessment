@@ -76,7 +76,7 @@ public class OrderController {
     }
 
     @PatchMapping("/{orderId}")
-    public ResponseEntity<Void> deleteById(@PathVariable(name = "orderId") UUID orderId,
+    public ResponseEntity<Void> updateStatus(@PathVariable(name = "orderId") UUID orderId,
                                            @Valid @RequestBody OrderStatusChangeDto orderStatus) {
         orderService.updateStatus(orderId, orderStatus);
         return ResponseEntity.noContent().build();
