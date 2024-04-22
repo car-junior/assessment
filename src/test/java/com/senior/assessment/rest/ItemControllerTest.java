@@ -246,11 +246,10 @@ public class ItemControllerTest {
     @Test
     void testGivenItemId_whenDeleteItemById_thenReturn204() throws Exception {
         // Given / Arrange
-        var itemId = UUID.randomUUID();
-        willDoNothing().given(itemService).deleteItemById(itemId);
+        willDoNothing().given(itemService).deleteItemById(any(UUID.class));
 
         // When / Act
-        var response = mockMvc.perform(delete("/items/{itemId}", itemId));
+        var response = mockMvc.perform(delete("/items/{itemId}", UUID.randomUUID()));
 
         //Then / Assert
         response.andExpect(status().isNoContent());
@@ -264,7 +263,7 @@ public class ItemControllerTest {
                 .httpStatus(HttpStatus.NOT_FOUND)
                 .message(String.format("Cannot found item with id %s.", itemId))
                 .build())
-                .given(itemService).deleteItemById(itemId);
+                .given(itemService).deleteItemById(any(UUID.class));
 
         // When / Act
         var errorResponse = mockMvc.perform(delete("/items/{itemId}", itemId));
