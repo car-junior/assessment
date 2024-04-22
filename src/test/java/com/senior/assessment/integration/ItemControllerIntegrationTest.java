@@ -6,6 +6,7 @@ import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
 import com.senior.assessment.domain.dto.item.ItemDetailDto;
 import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
+import com.senior.assessment.infrastructure.ErrorResponse;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.filter.log.LogDetail;
@@ -328,5 +329,77 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                 .delete("/{itemId}", itemId)
                 .then()
                 .statusCode(204);
+    }
+
+    // Cenários negativos de teste
+
+    @Test
+    @Order(10)
+    void testGivenInvalidItemCreateUpdateDto_whenCreateItem_thenReturn400AndErrorResponse() {
+        var errorResponse = given()
+                .spec(requestSpecification)
+                .contentType(CONTENT_TYPE_JSON)
+                .body(new ItemCreateUpdateDto())
+                .when()
+                .post()
+                .then()
+                .statusCode(400)
+                .extract()
+                .body()
+                .as(ErrorResponse.class);
+
+        assertNotNull(errorResponse);
+        assertNotNull(errorResponse.getCode());
+        assertThat(errorResponse.getErrors()).isNotEmpty();
+    }
+
+    @Test
+    @Order(11)
+    void testGivenInvalidItemCreateUpdateDto_whenUpdateItem_thenReturn400AndErrorResponse() {
+        var errorResponse = given()
+                .spec(requestSpecification)
+                .contentType(CONTENT_TYPE_JSON)
+                .body(new ItemCreateUpdateDto())
+                .when()
+                .put("/{itemId}", UUID.randomUUID())
+                .then()
+                .statusCode(400)
+                .extract()
+                .body()
+                .as(ErrorResponse.class);
+
+        assertNotNull(errorResponse);
+        assertNotNull(errorResponse.getCode());
+        assertNotNull(errorResponse.getErrors());
+        assertThat(errorResponse.getErrors()).isNotEmpty();
+    }
+
+    @Test
+    @Order(12)
+    void testGivenNonExistingItemId_whenUpdateItem_thenReturn404AndErrorResponse() {
+        var nonExistingItemId = UUID.randomUUID();
+        var itemUpdateDto = ItemCreateUpdateDto.builder()
+                .name("Controle Universal")
+                .type(ItemType.PRODUCT)
+                .status(ItemStatus.ACTIVE)
+                .price(BigDecimal.valueOf(29.99))
+                .build();
+
+        var errorResponse = given()
+                .spec(requestSpecification)
+                .contentType(CONTENT_TYPE_JSON)
+                .body(itemUpdateDto)
+                .when()
+                .put("/{itemId}", nonExistingItemId)
+                .then()
+                .statusCode(404)
+                .extract()
+                .body()
+                .as(ErrorResponse.class);
+
+        assertNotNull(errorResponse);
+        assertNotNull(errorResponse.getCode());
+        assertNotNull(errorResponse.getMessage());
+        assertEquals(String.format("Cannot found item with id %s.", nonExistingItemId), errorResponse.getMessage());
     }
 }
