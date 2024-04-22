@@ -3,6 +3,7 @@ package com.senior.assessment.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senior.assessment.config.mapper.ModelMapperService;
 import com.senior.assessment.domain.config.AssessmentConfigTest;
+import com.senior.assessment.domain.dto.order.OrderStatusChangeDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderCreateUpdateDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderItemDto;
 import com.senior.assessment.domain.dto.order.detailslist.OrderDetailDto;
@@ -227,6 +228,7 @@ public class OrderControllerTest {
         //Then / Assert
         response.andExpect(status().isNoContent());
     }
+
     @Test
     void testGivenNonExistsOrderId_whenDeleteOrderById_thenReturn404AndErrorResponse() throws Exception {
         // Given / Arrange
@@ -269,6 +271,84 @@ public class OrderControllerTest {
                         .value(String.format("Cannot delete order %s.", OrderStatus.CLOSED)));
     }
 
+    @Test
+    void testGivenOrderIdAndOrderStatus_whenUpdateStatusById_thenReturn204() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        var orderStatusChangeDto = new OrderStatusChangeDto(OrderStatus.CLOSED);
+        willDoNothing().given(orderService).updateStatus(orderId, orderStatusChangeDto);
+
+        // When / Act
+        var response = mockMvc.perform(
+                patch("/orders/{orderId}", orderId)
+                        .content(objectMapper.writeValueAsString(orderStatusChangeDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        response.andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testGivenOrderIdAndInvalidOrderStatus_whenUpdateStatusById_thenReturn400AndErrorResponse() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        // When / Act
+        var response = mockMvc.perform(
+                patch("/orders/{orderId}", orderId)
+                        .content(objectMapper.writeValueAsString(new OrderStatusChangeDto()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors.*").isNotEmpty());
+    }
+
+//    @Test
+//    void testGivenNonExistsOrderId_whenDeleteOrderById_thenReturn404AndErrorResponse() throws Exception {
+//        // Given / Arrange
+//        var orderId = UUID.randomUUID();
+//
+//        willThrow(CustomException.builder()
+//                .httpStatus(HttpStatus.NOT_FOUND)
+//                .message(String.format("Cannot found order with id %s.", orderId))
+//                .build())
+//                .given(orderService).deleteOrderById(orderId);
+//
+//        // When / Act
+//        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
+//
+//        //Then / Assert
+//        errorResponse.andExpect(status().isNotFound())
+//                .andExpect(jsonPath("$.status").value(404))
+//                .andExpect(jsonPath("$.message")
+//                        .value(String.format("Cannot found order with id %s.", orderId)));
+//    }
+//
+//    @Test
+//    void testGivenOrderIdClosed_whenDeleteOrderById_thenReturn400AndErrorResponse() throws Exception {
+//        // Given / Arrange
+//        var orderId = UUID.randomUUID();
+//
+//        willThrow(CustomException.builder()
+//                .httpStatus(HttpStatus.BAD_REQUEST)
+//                .message(String.format("Cannot delete order %s.", OrderStatus.CLOSED))
+//                .build())
+//                .given(orderService).deleteOrderById(orderId);
+//
+//        // When / Act
+//        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
+//
+//        //Then / Assert
+//        errorResponse.andExpect(status().isBadRequest())
+//                .andExpect(jsonPath("$.status").value(400))
+//                .andExpect(jsonPath("$.message")
+//                        .value(String.format("Cannot delete order %s.", OrderStatus.CLOSED)));
+//    }
+
     private OrderDetailDto getOrderDetailDto(Order order) {
         var orderDetailDto = modelMapper.map(order, OrderDetailDto.class);
         IntStream.rangeClosed(0, orderDetailDto.getOrderItems().size() - 1)
@@ -277,14 +357,14 @@ public class OrderControllerTest {
                     if (index % 2 == 0) {
                         orderItemDetailDto.getItem().setType(ItemType.PRODUCT);
                         orderItemDetailDto.setItemPrice(BigDecimal.valueOf(50.00));
-                    }
-                    else {
+                    } else {
                         orderItemDetailDto.getItem().setType(ItemType.SERVICE);
                         orderItemDetailDto.setItemPrice(BigDecimal.valueOf(100.00));
                     }
                 });
         return orderDetailDto;
     }
+
     private OrderCreateUpdateDto getOrderCreateUpdateDto() {
         var orderItemsDto = new HashSet<OrderItemDto>();
         IntStream.rangeClosed(0, 1)
