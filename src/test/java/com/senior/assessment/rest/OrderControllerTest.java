@@ -190,7 +190,7 @@ public class OrderControllerTest {
     }
 
     @Test
-    void testGivenOrderIdClosed_whenUpdateOrder_thenReturn400AndErrorResponse() throws Exception {
+    void testGivenOrderIdClosed_whenUpdateOrder_thenReturn404AndErrorResponse() throws Exception {
         // Given / Arrange
         var orderId = UUID.randomUUID();
         var order = modelMapper.map(orderCreateUpdateDto, Order.class);
@@ -219,11 +219,10 @@ public class OrderControllerTest {
     @Test
     void testGivenOrderId_whenDeleteOrderById_thenReturn204() throws Exception {
         // Given / Arrange
-        var orderId = UUID.randomUUID();
-        willDoNothing().given(orderService).deleteOrderById(orderId);
+        willDoNothing().given(orderService).deleteOrderById(any(UUID.class));
 
         // When / Act
-        var response = mockMvc.perform(delete("/orders/{orderId}", orderId));
+        var response = mockMvc.perform(delete("/orders/{orderId}", UUID.randomUUID()));
 
         //Then / Assert
         response.andExpect(status().isNoContent());
@@ -238,7 +237,7 @@ public class OrderControllerTest {
                 .httpStatus(HttpStatus.NOT_FOUND)
                 .message(String.format("Cannot found order with id %s.", orderId))
                 .build())
-                .given(orderService).deleteOrderById(orderId);
+                .given(orderService).deleteOrderById(any(UUID.class));
 
         // When / Act
         var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
@@ -253,16 +252,14 @@ public class OrderControllerTest {
     @Test
     void testGivenOrderIdClosed_whenDeleteOrderById_thenReturn400AndErrorResponse() throws Exception {
         // Given / Arrange
-        var orderId = UUID.randomUUID();
-
         willThrow(CustomException.builder()
                 .httpStatus(HttpStatus.BAD_REQUEST)
                 .message(String.format("Cannot delete order %s.", OrderStatus.CLOSED))
                 .build())
-                .given(orderService).deleteOrderById(orderId);
+                .given(orderService).deleteOrderById(any(UUID.class));
 
         // When / Act
-        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
+        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", UUID.randomUUID()));
 
         //Then / Assert
         errorResponse.andExpect(status().isBadRequest())
@@ -274,14 +271,12 @@ public class OrderControllerTest {
     @Test
     void testGivenOrderIdAndOrderStatus_whenUpdateStatusById_thenReturn204() throws Exception {
         // Given / Arrange
-        var orderId = UUID.randomUUID();
-        var orderStatusChangeDto = new OrderStatusChangeDto(OrderStatus.CLOSED);
-        willDoNothing().given(orderService).updateStatus(orderId, orderStatusChangeDto);
+        willDoNothing().given(orderService).updateStatus(any(UUID.class), any(OrderStatusChangeDto.class));
 
         // When / Act
         var response = mockMvc.perform(
-                patch("/orders/{orderId}", orderId)
-                        .content(objectMapper.writeValueAsString(orderStatusChangeDto))
+                patch("/orders/{orderId}", UUID.randomUUID())
+                        .content(objectMapper.writeValueAsString(new OrderStatusChangeDto(OrderStatus.CLOSED)))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON));
 
@@ -295,16 +290,66 @@ public class OrderControllerTest {
         var orderId = UUID.randomUUID();
 
         // When / Act
-        var response = mockMvc.perform(
+        var errorResponse = mockMvc.perform(
                 patch("/orders/{orderId}", orderId)
                         .content(objectMapper.writeValueAsString(new OrderStatusChangeDto()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON));
 
         //Then / Assert
-        response.andExpect(status().isBadRequest())
+        errorResponse.andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errors.*").isNotEmpty());
+    }
+
+    @Test
+    void testGivenNonExistsOrderIdAndOrderStatus_whenUpdateStatusById_thenReturn404AndErrorResponse() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        willThrow(CustomException.builder()
+                .httpStatus(HttpStatus.NOT_FOUND)
+                .message(String.format("Cannot found order with id %s.", orderId))
+                .build())
+                .given(orderService).updateStatus(any(UUID.class), any(OrderStatusChangeDto.class));
+
+        // When / Act
+        var errorResponse = mockMvc.perform(
+                patch("/orders/{orderId}", orderId)
+                        .content(objectMapper.writeValueAsString(new OrderStatusChangeDto(OrderStatus.CLOSED)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        errorResponse.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Cannot found order with id %s.", orderId)));
+    }
+
+    @Test
+    void testGivenOrderIdAlreadyClosed_whenUpdateStatusById_thenReturn400AndErrorResponse() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        willThrow(CustomException.builder()
+                .httpStatus(HttpStatus.BAD_REQUEST)
+                .message(String.format("Order %s already %s.", orderId, OrderStatus.CLOSED))
+                .build())
+                .given(orderService).updateStatus(any(UUID.class), any(OrderStatusChangeDto.class));
+
+        // When / Act
+        var errorResponse = mockMvc.perform(
+                patch("/orders/{orderId}", orderId)
+                        .content(objectMapper.writeValueAsString(new OrderStatusChangeDto(OrderStatus.CLOSED)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        errorResponse.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message")
+                        .value(String.format("Order %s already %s.", orderId, OrderStatus.CLOSED)));
     }
 
 //    @Test
