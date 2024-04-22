@@ -2,7 +2,6 @@ package com.senior.assessment.domain.config;
 
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -11,8 +10,8 @@ import org.testcontainers.lifecycle.Startables;
 import java.util.Map;
 import java.util.stream.Stream;
 
-@ContextConfiguration(initializers = AssessmentIntegrationConfig.Initializer.class)
-public abstract class AssessmentIntegrationConfig {
+@ContextConfiguration(initializers = PostgreSQLContainerConfig.Initializer.class)
+public abstract class PostgreSQLContainerConfig {
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
         // Criando um Container em Runtime para a imagem do PostgreSQL
