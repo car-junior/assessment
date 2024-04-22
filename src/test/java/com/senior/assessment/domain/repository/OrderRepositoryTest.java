@@ -1,7 +1,7 @@
 package com.senior.assessment.domain.repository;
 
 import com.senior.assessment.domain.config.AssessmentConfigTest;
-import com.senior.assessment.domain.config.RepositoryIntegrationConfig;
+import com.senior.assessment.domain.config.PostgreSQLContainerConfig;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.entity.OrderItem;
@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 @Import(AssessmentConfigTest.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class OrderRepositoryTest extends RepositoryIntegrationConfig {
+public class OrderRepositoryTest extends PostgreSQLContainerConfig {
     private Order order;
     @Autowired
     private ItemRepository itemRepository;
@@ -61,10 +61,10 @@ public class OrderRepositoryTest extends RepositoryIntegrationConfig {
 
         // When / Act
         orderRepository.updateStatus(order.getId(), newStatus);
-        var existsOrderByIdAndStatus = orderRepository.exists(expressionOrderByIdAndStatus);
+        var existsOrder = orderRepository.exists(expressionOrderByIdAndStatus);
 
         // Then / Assert
-        assertTrue(existsOrderByIdAndStatus);
+        assertTrue(existsOrder);
     }
 
     @Test
@@ -77,9 +77,9 @@ public class OrderRepositoryTest extends RepositoryIntegrationConfig {
 
         // When / Act
         orderRepository.updateStatus(UUID.randomUUID(), newStatus);
-        var existsOrderByIdAndStatus = orderRepository.exists(expressionOrderByIdAndStatus);
+        var existsOrder = orderRepository.exists(expressionOrderByIdAndStatus);
 
         // Then / Assert
-        assertFalse(existsOrderByIdAndStatus);
+        assertFalse(existsOrder);
     }
 }
