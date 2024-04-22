@@ -3,6 +3,7 @@ package com.senior.assessment.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senior.assessment.config.mapper.ModelMapperService;
 import com.senior.assessment.domain.config.AssessmentConfigTest;
+import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderCreateUpdateDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderItemDto;
 import com.senior.assessment.domain.dto.order.detailslist.OrderDetailDto;
@@ -107,6 +108,22 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.totalProduct").value(100.0))
                 .andExpect(jsonPath("$.orderItems").isNotEmpty())
                 .andExpect(jsonPath("$.orderItems[0].item").exists());
+    }
+
+    @Test
+    void testGivenInvalidOrderCreateUpdateDto_whenCreateOrder_thenReturn400AndErrors() throws Exception {
+        // Given / Arrange
+
+        // When / Act
+        var response = mockMvc.perform(post("/orders")
+                .content(objectMapper.writeValueAsString(new OrderCreateUpdateDto()))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.errors.*").isNotEmpty());
     }
 
 
