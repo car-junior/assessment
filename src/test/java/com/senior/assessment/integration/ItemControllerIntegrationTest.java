@@ -402,4 +402,26 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
         assertNotNull(errorResponse.getMessage());
         assertEquals(String.format("Cannot found item with id %s.", nonExistingItemId), errorResponse.getMessage());
     }
+
+    @Test
+    @Order(13)
+    void testGivenNonExistingItemId_whenGetItemById_thenReturn404AndErrorResponse() {
+        var nonExistingItemId = UUID.randomUUID();
+
+        var errorResponse = given()
+                .spec(requestSpecification)
+                .contentType(CONTENT_TYPE_JSON)
+                .when()
+                .get("/{itemId}", nonExistingItemId)
+                .then()
+                .statusCode(404)
+                .extract()
+                .body()
+                .as(ErrorResponse.class);
+
+        assertNotNull(errorResponse);
+        assertNotNull(errorResponse.getCode());
+        assertNotNull(errorResponse.getMessage());
+        assertEquals(String.format("Cannot found item with id %s.", nonExistingItemId), errorResponse.getMessage());
+    }
 }
