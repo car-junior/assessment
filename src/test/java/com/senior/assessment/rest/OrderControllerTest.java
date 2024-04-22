@@ -32,8 +32,7 @@ import java.util.stream.IntStream;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -216,6 +215,18 @@ public class OrderControllerTest {
                         .value(String.format("Cannot edit order because is %s.", OrderStatus.CLOSED)));
     }
 
+    @Test
+    void testGivenOrderId_whenDeleteOrderById_thenReturn204() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        willDoNothing().given(orderService).deleteOrderById(orderId);
+
+        // When / Act
+        var response = mockMvc.perform(delete("/orders/{orderId}", orderId));
+
+        //Then / Assert
+        response.andExpect(status().isNoContent());
+    }
     @Test
     void testGivenNonExistsOrderId_whenDeleteOrderById_thenReturn404AndErrorResponse() throws Exception {
         // Given / Arrange
