@@ -116,6 +116,38 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.errors.*").isNotEmpty());
     }
 
+
+    @Test
+    void testGivenOrderUpdateCreateDto_whenUpdateOrder_thenReturn200AndOrderDetailDto() throws Exception {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        orderCreateUpdateDto.setDiscount(0.2);
+        var order = modelMapper.map(orderCreateUpdateDto, Order.class);
+        order.setId(orderId);
+
+        given(modelMapperService.toObject(eq(Order.class), any(OrderCreateUpdateDto.class)))
+                .willReturn(order);
+        given(orderService.updateOrder(any(UUID.class), any(Order.class)))
+                .willReturn(order);
+        given(modelMapperService.toObject(eq(OrderDetailDto.class), any(Order.class)))
+                .willReturn(getOrderDetailDto(order));
+
+        // When / Act
+        var response = mockMvc.perform(put("/orders/{orderId}", orderId)
+                .content(objectMapper.writeValueAsString(orderCreateUpdateDto))
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON));
+
+        //Then / Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.discount").value(0.2))
+                .andExpect(jsonPath("$.total").value(280.00))
+                .andExpect(jsonPath("$.totalService").value(200.00))
+                .andExpect(jsonPath("$.totalProduct").value(80.00))
+                .andExpect(jsonPath("$.orderItems").isNotEmpty());
+    }
+
     @Test
     void testGivenInvalidOrderCreateUpdateDto_whenUpdateOrder_thenReturn400AndErrors() throws Exception {
         // Given / Arrange
