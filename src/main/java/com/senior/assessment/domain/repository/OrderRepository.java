@@ -12,8 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID>, QuerydslPredicateExecutor<Order> {
-    boolean existsOrderById(UUID orderId);
-
     @Modifying
     @Transactional
     @Query("UPDATE Order o SET o.status = :newStatus WHERE o.id = :id")
