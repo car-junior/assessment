@@ -165,6 +165,7 @@ public class ItemControllerTest {
 
         //Then / Assert
         response.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.errors.*").isNotEmpty());
     }
 
