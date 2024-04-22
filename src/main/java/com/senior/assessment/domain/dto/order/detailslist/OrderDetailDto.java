@@ -2,18 +2,19 @@ package com.senior.assessment.domain.dto.order.detailslist;
 
 import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.enums.OrderStatus;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.UUID;
 
+
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder(toBuilder = true)
 public class OrderDetailDto {
     private UUID id;
     private double discount;

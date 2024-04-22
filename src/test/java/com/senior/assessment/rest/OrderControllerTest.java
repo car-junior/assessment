@@ -3,13 +3,18 @@ package com.senior.assessment.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.senior.assessment.config.mapper.ModelMapperService;
 import com.senior.assessment.domain.config.AssessmentConfigTest;
+import com.senior.assessment.domain.dto.PageResult;
+import com.senior.assessment.domain.dto.item.ItemDetailDto;
 import com.senior.assessment.domain.dto.order.OrderStatusChangeDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderCreateUpdateDto;
 import com.senior.assessment.domain.dto.order.createupdate.OrderItemDto;
 import com.senior.assessment.domain.dto.order.detailslist.OrderDetailDto;
+import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.enums.OrderStatus;
+import com.senior.assessment.domain.querydsl.search.ItemSearch;
+import com.senior.assessment.domain.querydsl.search.OrderSearch;
 import com.senior.assessment.domain.service.OrderService;
 import com.senior.assessment.infrastructure.GlobalExceptionHandler;
 import com.senior.assessment.infrastructure.exception.CustomException;
@@ -20,6 +25,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,7 +35,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
@@ -397,69 +407,46 @@ public class OrderControllerTest {
                 .andExpect(jsonPath("$.message").value(String.format("Cannot found order with id %s.", orderId)));
     }
 
-//    @Test
-//    void testGivenNonExistsOrderId_whenDeleteOrderById_thenReturn404AndErrorResponse() throws Exception {
-//        // Given / Arrange
-//        var orderId = UUID.randomUUID();
-//
-//        willThrow(CustomException.builder()
-//                .httpStatus(HttpStatus.NOT_FOUND)
-//                .message(String.format("Cannot found order with id %s.", orderId))
-//                .build())
-//                .given(orderService).deleteOrderById(any(UUID.class));
-//
-//        // When / Act
-//        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
-//
-//        //Then / Assert
-//        errorResponse.andExpect(status().isNotFound())
-//                .andExpect(jsonPath("$.status").value(404))
-//                .andExpect(jsonPath("$.message")
-//                        .value(String.format("Cannot found order with id %s.", orderId)));
-//    }
+    @Test
+    void testGivenOrderSearchAndPaginationDefault_whenGetAllOrder_thenReturn200AndPageResult() throws Exception {
+        // Given / Arrange
+        var page = createPage();
+        var pageResult = createPageResult(page);
 
-//    @Test
-//    void testGivenNonExistsOrderId_whenDeleteOrderById_thenReturn404AndErrorResponse() throws Exception {
-//        // Given / Arrange
-//        var orderId = UUID.randomUUID();
-//
-//        willThrow(CustomException.builder()
-//                .httpStatus(HttpStatus.NOT_FOUND)
-//                .message(String.format("Cannot found order with id %s.", orderId))
-//                .build())
-//                .given(orderService).deleteOrderById(orderId);
-//
-//        // When / Act
-//        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
-//
-//        //Then / Assert
-//        errorResponse.andExpect(status().isNotFound())
-//                .andExpect(jsonPath("$.status").value(404))
-//                .andExpect(jsonPath("$.message")
-//                        .value(String.format("Cannot found order with id %s.", orderId)));
-//    }
-//
-//    @Test
-//    void testGivenOrderIdClosed_whenDeleteOrderById_thenReturn400AndErrorResponse() throws Exception {
-//        // Given / Arrange
-//        var orderId = UUID.randomUUID();
-//
-//        willThrow(CustomException.builder()
-//                .httpStatus(HttpStatus.BAD_REQUEST)
-//                .message(String.format("Cannot delete order %s.", OrderStatus.CLOSED))
-//                .build())
-//                .given(orderService).deleteOrderById(orderId);
-//
-//        // When / Act
-//        var errorResponse = mockMvc.perform(delete("/orders/{orderId}", orderId));
-//
-//        //Then / Assert
-//        errorResponse.andExpect(status().isBadRequest())
-//                .andExpect(jsonPath("$.status").value(400))
-//                .andExpect(jsonPath("$.message")
-//                        .value(String.format("Cannot delete order %s.", OrderStatus.CLOSED)));
-//    }
+        given(orderService.getAllOrder(any(OrderSearch.class), any(PageRequest.class)))
+                .willReturn(page);
+        given(modelMapperService.toPage(eq(OrderDetailDto.class), any(Page.class)))
+                .willReturn(pageResult);
 
+        // When / Act
+        var response = mockMvc.perform(get("/orders"));
+
+        //Then / Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.totalResults").value(2))
+                .andExpect(jsonPath("$.result").isNotEmpty());
+    }
+
+    @Test
+    void testGivenEmptyOrderSearchAndPaginationDefault_whenGetAllOrder_thenReturn200AndPageResult() throws Exception {
+        // Given / Arrange
+        var orderPage = new PageImpl<Order>(Collections.emptyList(), PageRequest.of(0, 10), 0);
+
+        given(orderService.getAllOrder(any(OrderSearch.class), any(PageRequest.class)))
+                .willReturn(orderPage);
+        given(modelMapperService.toPage(eq(OrderDetailDto.class), any(Page.class)))
+                .willReturn(new PageResult<>(0, 0, Collections.emptyList()));
+
+        // When / Act
+        var response = mockMvc.perform(get("/orders"));
+
+        // Then / Assert
+        response.andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPages").value(0))
+                .andExpect(jsonPath("$.totalResults").value(0))
+                .andExpect(jsonPath("$.result").isEmpty());
+    }
     private OrderDetailDto getOrderDetailDto(Order order) {
         var orderDetailDto = modelMapper.map(order, OrderDetailDto.class);
         IntStream.rangeClosed(0, orderDetailDto.getOrderItems().size() - 1)
@@ -488,5 +475,23 @@ public class OrderControllerTest {
                 .discount(0.5)
                 .orderItems(orderItemsDto)
                 .build();
+    }
+
+    private PageResult<OrderDetailDto> createPageResult(Page<Order> page) {
+        List<OrderDetailDto> ordersDetailDto = page.getContent()
+                .stream()
+                .map(this::getOrderDetailDto)
+                .toList();
+
+        return new PageResult<>(page.getTotalPages(), page.getTotalElements(), ordersDetailDto);
+    }
+    private Page<Order> createPage() {
+        var orderOne = modelMapper.map(orderCreateUpdateDto, Order.class);
+        var orderTwo = orderOne.toBuilder()
+                .id(UUID.randomUUID())
+                .discount(0.5)
+                .build();
+        var orders = List.of(orderOne, orderTwo);
+        return new PageImpl<>(orders, PageRequest.of(0, 10), orders.size());
     }
 }

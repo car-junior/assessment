@@ -18,9 +18,9 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder(toBuilder = true)
 @Table(name = "order", schema = "dbo")
 @EntityListeners(AuditingEntityListener.class)
 public class Order extends Auditable {
