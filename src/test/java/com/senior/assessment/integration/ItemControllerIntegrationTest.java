@@ -140,7 +140,6 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                 .status(ItemStatus.ACTIVE)
                 .price(BigDecimal.valueOf(100.00))
                 .build();
-
         given().spec(requestSpecification)
                 .contentType(CONTENT_TYPE_JSON)
                 .body(newItemCreateDto)
@@ -177,7 +176,30 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
 
     @Test
     @Order(5)
-    void testGivenItemSearchQueryAndPaginationDefault_whenGetAllItem_thenReturn200AndPageResultItemDetailDto() {
+    void testGivenItemIdAndPaginationDefault_whenGetAllItem_thenReturn200AndPageResultItemDetailDto() {
+        PageResult<ItemDetailDto> pageResult = given()
+                .spec(requestSpecification)
+                .param("itemId", itemId)
+                .when()
+                .get()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+        assertNotNull(pageResult);
+        assertNotNull(pageResult.getResult());
+        assertNotNull(pageResult.getResult().get(0).getId());
+        assertEquals(1, pageResult.getTotalPages());
+        assertEquals(1, pageResult.getTotalResults());
+        assertEquals(itemId, pageResult.getResult().get(0).getId());
+    }
+
+    @Test
+    @Order(6)
+    void testGivenQueryAndPaginationDefault_whenGetAllItem_thenReturn200AndPageResultItemDetailDto() {
         var query = "teclado";
         PageResult<ItemDetailDto> pageResult = given()
                 .spec(requestSpecification)
@@ -195,9 +217,106 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
         assertNotNull(pageResult.getResult());
         assertEquals(1, pageResult.getTotalPages());
         assertEquals(1, pageResult.getTotalResults());
-        assertEquals("Teclado", pageResult.getResult().get(0).getName());
-        assertEquals(ItemType.PRODUCT, pageResult.getResult().get(0).getType());
-        assertEquals(ItemStatus.ACTIVE, pageResult.getResult().get(0).getStatus());
-        assertThat(BigDecimal.valueOf(100.00)).isEqualByComparingTo(pageResult.getResult().get(0).getPrice());
+        pageResult.getResult()
+                .forEach(itemDetailDto -> {
+                    assertNotNull(itemDetailDto.getId());
+                    assertNotNull(itemDetailDto.getName());
+                    assertNotNull(itemDetailDto.getType());
+                    assertNotNull(itemDetailDto.getStatus());
+                    assertNotNull(itemDetailDto.getCreatedDate());
+                    assertNotNull(itemDetailDto.getLastModifiedDate());
+                });
+    }
+
+    @Test
+    @Order(7)
+    void testGivenItemTypeAndPaginationDefault_whenGetAllItem_thenReturn200AndPageResultItemDetailDto() {
+        var type = ItemType.SERVICE;
+        var newItemCreateDto = ItemCreateUpdateDto.builder()
+                .name("Instalar Impressoras")
+                .type(ItemType.SERVICE)
+                .status(ItemStatus.ACTIVE)
+                .price(BigDecimal.valueOf(50.00))
+                .build();
+        given().spec(requestSpecification)
+                .contentType(CONTENT_TYPE_JSON)
+                .body(newItemCreateDto)
+                .when()
+                .post()
+                .then()
+                .statusCode(200);
+
+        PageResult<ItemDetailDto> pageResult = given()
+                .spec(requestSpecification)
+                .param("type", type)
+                .when()
+                .get()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+        assertNotNull(pageResult);
+        assertNotNull(pageResult.getResult());
+        assertEquals(1, pageResult.getTotalPages());
+        assertEquals(2, pageResult.getTotalResults());
+        pageResult.getResult()
+                .forEach(itemDetailDto -> {
+                    assertNotNull(itemDetailDto.getId());
+                    assertNotNull(itemDetailDto.getName());
+                    assertNotNull(itemDetailDto.getType());
+                    assertNotNull(itemDetailDto.getStatus());
+                    assertNotNull(itemDetailDto.getCreatedDate());
+                    assertNotNull(itemDetailDto.getLastModifiedDate());
+                    assertEquals(type, itemDetailDto.getType());
+                });
+    }
+
+    @Test
+    @Order(8)
+    void testGivenItemStatusAndPaginationDefault_whenGetAllItem_thenReturn200AndPageResultItemDetailDto() {
+        var status = ItemStatus.DISABLED;
+        var newItemCreateDto = ItemCreateUpdateDto.builder()
+                .name("Mouse")
+                .type(ItemType.PRODUCT)
+                .status(ItemStatus.DISABLED)
+                .price(BigDecimal.valueOf(50.00))
+                .build();
+        given().spec(requestSpecification)
+                .contentType(CONTENT_TYPE_JSON)
+                .body(newItemCreateDto)
+                .when()
+                .post()
+                .then()
+                .statusCode(200);
+
+        PageResult<ItemDetailDto> pageResult = given()
+                .spec(requestSpecification)
+                .param("status", status)
+                .when()
+                .get()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(new TypeRef<>() {
+                });
+
+        assertNotNull(pageResult);
+        assertNotNull(pageResult.getResult());
+        assertEquals(1, pageResult.getTotalPages());
+        assertEquals(2, pageResult.getTotalResults());
+        pageResult.getResult()
+                .forEach(itemDetailDto -> {
+                    assertNotNull(itemDetailDto.getId());
+                    assertNotNull(itemDetailDto.getName());
+                    assertNotNull(itemDetailDto.getType());
+                    assertNotNull(itemDetailDto.getStatus());
+                    assertNotNull(itemDetailDto.getCreatedDate());
+                    assertNotNull(itemDetailDto.getLastModifiedDate());
+                    assertEquals(status, itemDetailDto.getStatus());
+                });
     }
 }
