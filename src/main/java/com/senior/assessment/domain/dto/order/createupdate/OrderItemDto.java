@@ -2,16 +2,16 @@ package com.senior.assessment.domain.dto.order.createupdate;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Objects;
 import java.util.UUID;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class OrderItemDto {
     private UUID id;
 
@@ -38,6 +38,7 @@ public class OrderItemDto {
     @Getter
     @Setter
     @NoArgsConstructor
+    @AllArgsConstructor
     public static class ItemDto {
         @NotNull
         private UUID id;

@@ -2,15 +2,15 @@ package com.senior.assessment.domain.dto.order.createupdate;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Set;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class OrderCreateUpdateDto {
 
     @DecimalMin(value = "0.0")

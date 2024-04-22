@@ -4,6 +4,8 @@ import com.senior.assessment.domain.config.AssessmentIntegrationConfig;
 import com.senior.assessment.domain.dto.PageResult;
 import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
 import com.senior.assessment.domain.dto.item.ItemDetailDto;
+import com.senior.assessment.domain.dto.order.createupdate.OrderCreateUpdateDto;
+import com.senior.assessment.domain.dto.order.createupdate.OrderItemDto;
 import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.infrastructure.ErrorResponse;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.util.Set;
 import java.util.UUID;
 
 import static com.senior.assessment.domain.config.ServerConfigTest.CONTENT_TYPE_JSON;
@@ -335,6 +338,51 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
 
     @Test
     @Order(10)
+    void testGivenItemIdLinkedWithOrder_whenDeleteItemById_thenReturn400AndErrorResponse() {
+        var newItemCreateDto = ItemCreateUpdateDto.builder()
+                .name("HeadSet")
+                .type(ItemType.PRODUCT)
+                .status(ItemStatus.ACTIVE)
+                .price(BigDecimal.valueOf(100.00))
+                .build();
+        var itemDetailDto = given().spec(requestSpecification)
+                .contentType(CONTENT_TYPE_JSON)
+                .body(newItemCreateDto)
+                .when()
+                .post()
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(ItemDetailDto.class);
+
+        var orderCreateDto = createOrderWithItem(itemDetailDto.getId());
+        given().spec(new RequestSpecBuilder()
+                        .setBasePath("/orders")
+                        .setPort(SERVER_PORT)
+                        .build())
+                .contentType(CONTENT_TYPE_JSON)
+                .body(orderCreateDto)
+                .when()
+                .post()
+                .then()
+                .statusCode(200);
+
+        var errorResponse = given().spec(requestSpecification)
+                .when()
+                .delete("/{itemId}", itemDetailDto.getId())
+                .then()
+                .statusCode(400)
+                .extract()
+                .body()
+                .as(ErrorResponse.class);
+
+        assertNotNull(errorResponse);
+        assertNotNull(errorResponse.getCode());
+        assertEquals("Cannot delete item because have linked order.", errorResponse.getMessage());
+    }
+
+    @Test
     void testGivenInvalidItemCreateUpdateDto_whenCreateItem_thenReturn400AndErrorResponse() {
         var errorResponse = given()
                 .spec(requestSpecification)
@@ -354,7 +402,6 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
     }
 
     @Test
-    @Order(11)
     void testGivenInvalidItemCreateUpdateDto_whenUpdateItem_thenReturn400AndErrorResponse() {
         var errorResponse = given()
                 .spec(requestSpecification)
@@ -375,7 +422,6 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
     }
 
     @Test
-    @Order(12)
     void testGivenNonExistingItemId_whenUpdateItem_thenReturn404AndErrorResponse() {
         var nonExistingItemId = UUID.randomUUID();
         var itemUpdateDto = ItemCreateUpdateDto.builder()
@@ -404,7 +450,6 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
     }
 
     @Test
-    @Order(13)
     void testGivenNonExistingItemId_whenGetItemById_thenReturn404AndErrorResponse() {
         var nonExistingItemId = UUID.randomUUID();
 
@@ -423,5 +468,15 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
         assertNotNull(errorResponse.getCode());
         assertNotNull(errorResponse.getMessage());
         assertEquals(String.format("Cannot found item with id %s.", nonExistingItemId), errorResponse.getMessage());
+    }
+
+    private OrderCreateUpdateDto createOrderWithItem(UUID itemId) {
+        var orderItem = OrderItemDto.builder()
+                .amount(2)
+                .item(new OrderItemDto.ItemDto(itemId))
+                .build();
+        return OrderCreateUpdateDto.builder()
+                .orderItems(Set.of(orderItem))
+                .build();
     }
 }
