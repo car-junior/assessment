@@ -12,7 +12,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ErrorResponse {
+    private Integer status;
     private String message;
-    private HttpStatus code;
     private Map<String, List<String>> errors;
 }

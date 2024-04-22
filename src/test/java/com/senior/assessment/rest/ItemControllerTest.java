@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -42,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ItemController.class)
 @Import(AssessmentConfigTest.class)
+@MockBean(JpaMetamodelMappingContext.class)
 public class ItemControllerTest {
     @Autowired
     private MockMvc mockMvc;
@@ -166,7 +168,7 @@ public class ItemControllerTest {
     }
 
     @Test
-    void testGivenNonExistsItemId_whenUpdateItem_thenReturn404AndCustomException() throws Exception {
+    void testGivenNonExistsItemId_whenUpdateItem_thenReturn404AndErrorResponse() throws Exception {
         // Given / Arrange
         var itemId = UUID.randomUUID();
         var itemUpdateDto = ItemCreateUpdateDto.builder()
@@ -186,14 +188,14 @@ public class ItemControllerTest {
                         .build());
 
         // When / Act
-        var response = mockMvc.perform(put("/items/{itemId}", itemId)
+        var errorResponse = mockMvc.perform(put("/items/{itemId}", itemId)
                 .content(objectMapper.writeValueAsString(itemUpdateDto))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON));
 
         //Then / Assert
-        response.andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value(404))
+        errorResponse.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value(String.format("Cannot found item with id %s.", itemId)));
     }
 
@@ -221,7 +223,7 @@ public class ItemControllerTest {
                 .andExpect(jsonPath("$.id").exists());
     }
     @Test
-    void testGivenNonExistingItemId_whenGetItemById_thenReturn400AndCustomException() throws Exception {
+    void testGivenNonExistingItemId_whenGetItemById_thenReturn400AndErrorResponse() throws Exception {
         // Given / Arrange
         var itemId = UUID.randomUUID();
         given(itemService.getItemById(any(UUID.class)))
@@ -231,11 +233,11 @@ public class ItemControllerTest {
                         .build());
 
         // When / Act
-        var response = mockMvc.perform(get("/items/{itemId}", itemId));
+        var errorResponse = mockMvc.perform(get("/items/{itemId}", itemId));
 
         //Then / Assert
-        response.andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value(404))
+        errorResponse.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value(String.format("Cannot found item with id %s.", itemId)));
     }
 
@@ -253,7 +255,7 @@ public class ItemControllerTest {
     }
 
     @Test
-    void testGivenNonExistingItemId_whenDeleteItemById_thenReturn400AndCustomException() throws Exception {
+    void testGivenNonExistingItemId_whenDeleteItemById_thenReturn400AndErrorResponse() throws Exception {
         // Given / Arrange
         var itemId = UUID.randomUUID();
         willThrow(CustomException.builder()
@@ -263,11 +265,11 @@ public class ItemControllerTest {
                 .given(itemService).deleteItemById(itemId);
 
         // When / Act
-        var response = mockMvc.perform(delete("/items/{itemId}", itemId));
+        var errorResponse = mockMvc.perform(delete("/items/{itemId}", itemId));
 
         //Then / Assert
-        response.andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value(404))
+        errorResponse.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value(String.format("Cannot found item with id %s.", itemId)));
     }
 

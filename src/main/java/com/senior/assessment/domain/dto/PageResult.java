@@ -14,5 +14,6 @@ import java.util.List;
 public class PageResult<T> {
     private int totalPages;
     private long totalResults;
+    @Builder.Default
     private List<T> result = new ArrayList<>();
 }

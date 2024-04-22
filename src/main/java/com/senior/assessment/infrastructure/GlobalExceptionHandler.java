@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleCustomException(CustomException customException) {
         var errorResponse = ErrorResponse.builder()
                 .message(customException.getMessage())
-                .code(customException.getHttpStatus())
+                .status(customException.getHttpStatus().value())
                 .build();
         return ResponseEntity.status(customException.getHttpStatus()).body(errorResponse);
     }
@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         var errorResponse = ErrorResponse.builder()
-                .code(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.BAD_REQUEST.value())
                 .errors(getMethodArgumentsNotValid(ex))
                 .build();
         return ResponseEntity.badRequest().body(errorResponse);
@@ -38,10 +38,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(DataIntegrityViolationException exception) {
         var errorResponse = ErrorResponse.builder()
-                .code(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.BAD_REQUEST.value())
                 .message(exception.getCause().getCause().getMessage())
                 .build();
-        return ResponseEntity.status(errorResponse.getCode()).body(errorResponse);
+        return ResponseEntity.status(errorResponse.getStatus()).body(errorResponse);
     }
 
     private static Map<String, List<String>> getMethodArgumentsNotValid(MethodArgumentNotValidException ex) {

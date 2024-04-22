@@ -378,7 +378,7 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                 .as(ErrorResponse.class);
 
         assertNotNull(errorResponse);
-        assertNotNull(errorResponse.getCode());
+        assertNotNull(errorResponse.getStatus());
         assertEquals("Cannot delete item because have linked order.", errorResponse.getMessage());
     }
 
@@ -397,7 +397,7 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                 .as(ErrorResponse.class);
 
         assertNotNull(errorResponse);
-        assertNotNull(errorResponse.getCode());
+        assertNotNull(errorResponse.getStatus());
         assertThat(errorResponse.getErrors()).isNotEmpty();
     }
 
@@ -416,7 +416,7 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                 .as(ErrorResponse.class);
 
         assertNotNull(errorResponse);
-        assertNotNull(errorResponse.getCode());
+        assertNotNull(errorResponse.getStatus());
         assertNotNull(errorResponse.getErrors());
         assertThat(errorResponse.getErrors()).isNotEmpty();
     }
@@ -444,7 +444,7 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                 .as(ErrorResponse.class);
 
         assertNotNull(errorResponse);
-        assertNotNull(errorResponse.getCode());
+        assertNotNull(errorResponse.getStatus());
         assertNotNull(errorResponse.getMessage());
         assertEquals(String.format("Cannot found item with id %s.", nonExistingItemId), errorResponse.getMessage());
     }
@@ -465,7 +465,7 @@ public class ItemControllerIntegrationTest extends AssessmentIntegrationConfig {
                 .as(ErrorResponse.class);
 
         assertNotNull(errorResponse);
-        assertNotNull(errorResponse.getCode());
+        assertNotNull(errorResponse.getStatus());
         assertNotNull(errorResponse.getMessage());
         assertEquals(String.format("Cannot found item with id %s.", nonExistingItemId), errorResponse.getMessage());
     }
