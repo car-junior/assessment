@@ -170,10 +170,8 @@ public class OrderService {
     }
 
     private void assertOrderMayHaveDiscount(Order order) {
-        if (order.getDiscount() > 0D) {
-            assertOrderNotHaveTypeItemsNull(order);
+        if (order.getDiscount() > 0D)
             assertOrderHaveProductItem(order);
-        }
     }
 
     private void assertExistsAllItems(Set<UUID> itemsIds, Set<Item> items) {
@@ -188,24 +186,23 @@ public class OrderService {
         if (!missingItemIds.isEmpty())
             throw CustomException.builder()
                     .httpStatus(HttpStatus.NOT_FOUND)
-                    .message(String.format("Cannot found items: [%s].", missingItemIds))
+                    .message(String.format("Cannot found items: %s.", missingItemIds))
                     .build();
     }
 
     private void assertAllProductsItemsAreActive(Set<Item> items) {
-        var productsItemsDisabled = items.stream()
+        var productsDisabled = items.stream()
                 .filter(item -> item.getType() == ItemType.PRODUCT && item.getStatus() == ItemStatus.DISABLED)
                 .map(Item::getId)
                 .collect(Collectors.toSet());
 
-        if (!productsItemsDisabled.isEmpty())
+        if (!productsDisabled.isEmpty())
             throw CustomException.builder()
-                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .httpStatus(HttpStatus.BAD_REQUEST)
                     .message(String.format(
-                                    "Cannot add products items: %s to order because are %s.",
-                                    productsItemsDisabled,
-                                    ItemStatus.DISABLED
-                            )
+                            "Cannot add products items: %s to order because are %s.",
+                            productsDisabled,
+                            ItemStatus.DISABLED)
                     ).build();
     }
 
@@ -219,28 +216,18 @@ public class OrderService {
 
     private void assertOrderHaveProductItem(Order order) {
         var notContainsProductItem = order.getOrderItems().stream()
-                .filter(orderItem -> orderItem.getItem().getType() == ItemType.PRODUCT)
+                .filter(orderItem -> orderItem.getItem().getType() != null &&
+                        orderItem.getItem().getType() == ItemType.PRODUCT)
                 .findAny()
                 .isEmpty();
 
         if (notContainsProductItem)
             throw CustomException.builder()
-                    .httpStatus(HttpStatus.NOT_FOUND)
+                    .httpStatus(HttpStatus.BAD_REQUEST)
                     .message(String.format(
                             "Cannot apply discount in order because not contain item %s.",
                             ItemType.PRODUCT)
                     ).build();
-    }
-
-    private void assertOrderNotHaveTypeItemsNull(Order order) {
-        var haveTypeItemNull = order.getOrderItems().stream()
-                .anyMatch(orderItem -> orderItem.getItem().getType() == null);
-
-        if (haveTypeItemNull)
-            throw CustomException.builder()
-                    .httpStatus(HttpStatus.NOT_FOUND)
-                    .message("Contains items with null types, it is mandatory that all items have a type.")
-                    .build();
     }
 
     private void assertExistsAllOrderItems(Set<UUID> orderItemsIds, Set<OrderItem> orderItems) {

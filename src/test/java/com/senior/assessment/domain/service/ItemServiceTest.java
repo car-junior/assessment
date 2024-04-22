@@ -35,7 +35,6 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Units tests to ItemService")
 class ItemServiceTest {
     @Mock
     private ItemRepository itemRepository;
