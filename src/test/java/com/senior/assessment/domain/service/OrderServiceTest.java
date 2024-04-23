@@ -3,8 +3,8 @@ package com.senior.assessment.domain.service;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.entity.OrderItem;
-import com.senior.assessment.domain.enums.ItemStatus;
 import com.senior.assessment.domain.enums.ItemType;
+import com.senior.assessment.domain.enums.OrderStatus;
 import com.senior.assessment.domain.repository.ItemRepository;
 import com.senior.assessment.domain.repository.OrderItemRepository;
 import com.senior.assessment.domain.repository.OrderRepository;
@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.senior.assessment.domain.enums.ItemStatus.DISABLED;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -68,6 +69,7 @@ class OrderServiceTest {
         // Given / Arrange
         given(itemRepository.getAllByIdIn(any())).willReturn(items);
         given(orderRepository.save(any(Order.class))).willReturn(order);
+        order.setDiscount(0.6);
 
         // When / Act
         var savedOrder = orderService.createOrder(order);
@@ -75,8 +77,12 @@ class OrderServiceTest {
         // Then / Assert
         verify(orderRepository, times(1)).save(order);
         assertNotNull(savedOrder);
-        savedOrder.getOrderItems()
-                .forEach(orderItem -> assertNotNull(orderItem.getItemPrice()));
+        assertEquals(0.6, savedOrder.getDiscount());
+        assertEquals(2, savedOrder.getOrderItems().size());
+        savedOrder.getOrderItems().forEach(orderItem -> {
+            assertNotNull(orderItem.getItemPrice());
+            assertNotNull(orderItem.getOrder());
+        });
     }
 
     @Test
@@ -152,6 +158,176 @@ class OrderServiceTest {
         );
     }
 
+    @Test
+    void testGivenOrder_whenUpdateOrder_thenReturnUpdatedOrder() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        // Order existente/db
+        order.setId(orderId);
+        order.getOrderItems().get(0).setId(UUID.randomUUID());
+        order.getOrderItems().get(1).setId(UUID.randomUUID());
+
+        // Muda preço dos items
+        items.forEach(item -> item.setPrice(BigDecimal.valueOf(20.0)));
+
+        // Novas informações para order existente
+        var updatedOrderInfo = Order.builder()
+                .discount(0.8)
+                .orderItems(createOrderItems())
+                .build();
+        updatedOrderInfo.getOrderItems().get(0).setAmount(5);
+        updatedOrderInfo.getOrderItems().get(1).setAmount(10);
+
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+        given(orderItemRepository.getAllByIdIn(any())).willReturn(Collections.emptySet());
+        given(itemRepository.getAllByIdIn(any())).willReturn(items);
+        given(orderRepository.save(any(Order.class))).willReturn(order);
+
+        // When / Act
+        var updatedOrder = orderService.updateOrder(orderId, updatedOrderInfo);
+
+        // Then / Assert
+        verify(orderRepository, times(1)).save(order);
+        assertNotNull(updatedOrder);
+        assertEquals(0.8, updatedOrder.getDiscount());
+        assertEquals(5, updatedOrder.getOrderItems().get(0).getAmount());
+        assertThat(BigDecimal.valueOf(20.0)).isEqualByComparingTo(updatedOrder.getOrderItems().get(0).getItemPrice());
+        assertEquals(10, updatedOrder.getOrderItems().get(1).getAmount());
+        assertThat(BigDecimal.valueOf(20.0)).isEqualByComparingTo(updatedOrder.getOrderItems().get(1).getItemPrice());
+    }
+
+    @Test
+    void testGivenNonExistingOrderId_whenUpdateOrder_thenThrowsCustomException() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.updateOrder(orderId, mock(Order.class))
+        );
+
+        // Then / Assert
+        verify(orderRepository, never()).save(order);
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(String.format("Cannot found order with id %s.", orderId), customException.getMessage());
+    }
+
+    @Test
+    void testGivenOrderIdClosed_whenUpdateOrder_thenThrowsCustomException() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        order.setStatus(OrderStatus.CLOSED);
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.updateOrder(orderId, mock(Order.class))
+        );
+
+        // Then / Assert
+        verify(orderRepository, never()).save(order);
+        assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
+        assertEquals(String.format("Cannot edit order because is %s.", OrderStatus.CLOSED), customException.getMessage());
+    }
+
+    @Test
+    void testGivenOrderWithNonExistingOrderItemId_whenUpdateOrder_thenThrowsCustomException() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        var nonExistingOrderItems = createOrderItems().stream()
+                .peek(orderItem -> orderItem.setId(UUID.randomUUID()))
+                .toList();
+        var missingOrderItemsIds = nonExistingOrderItems.stream()
+                .map(OrderItem::getId)
+                .collect(Collectors.toSet());
+        var updatedOrderInfo = Order.builder()
+                .discount(0.8)
+                .orderItems(nonExistingOrderItems)
+                .build();
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+        given(orderItemRepository.getAllByIdIn(any())).willReturn(Collections.emptySet());
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.updateOrder(orderId, updatedOrderInfo)
+        );
+
+        // Then / Assert
+        verify(orderRepository, never()).save(order);
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(String.format("Cannot found order items: %s.", missingOrderItemsIds), customException.getMessage());
+    }
+
+    @Test
+    void testGivenOrderWithNonExistingItems_whenUpdateOrder_thenThrowsCustomException() {
+        // Given / Arrange
+
+        var updatedOrderInfo = Order.builder()
+                .discount(0.8)
+                .orderItems(createOrderItems())
+                .build();
+        //Seta items inexistentes para o teste
+        updatedOrderInfo.getOrderItems().forEach(orderItem -> orderItem.getItem().setId(UUID.randomUUID()));
+        var missingItemIds = order.getOrderItems().stream()
+                .map(orderItem -> orderItem.getItem().getId())
+                .collect(Collectors.toSet());
+
+        var orderId = UUID.randomUUID();
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+        given(orderItemRepository.getAllByIdIn(any())).willReturn(Collections.emptySet());
+        given(itemRepository.getAllByIdIn(any())).willReturn(items);
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.updateOrder(orderId, updatedOrderInfo));
+
+        // Then / Assert
+        verify(orderRepository, never()).save(order);
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(String.format("Cannot found items: %s.", missingItemIds), customException.getMessage());
+    }
+
+    @Test
+    void testGivenOrderWithDiscountAndNonExistingProductItem_whenUpdateOrder_thenThrowsCustomException() {
+        // Given / Arrange
+
+        // Adiciona desconto
+        var updatedOrderInfo = Order.builder()
+                .discount(0.8)
+                .orderItems(createOrderItems())
+                .build();
+        // Seta todos items que vão ser vinculados a order do tipo PRODUCT para SERVICE
+        items.stream()
+                .filter(item -> item.getType() == ItemType.PRODUCT)
+                .forEach(item -> item.setType(ItemType.SERVICE));
+
+        var orderId = UUID.randomUUID();
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+        given(orderItemRepository.getAllByIdIn(any())).willReturn(Collections.emptySet());
+        given(itemRepository.getAllByIdIn(any())).willReturn(items);
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.updateOrder(orderId, updatedOrderInfo)
+        );
+
+        // Then / Assert
+        verify(orderRepository, never()).save(order);
+        assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
+        assertEquals(
+                String.format("Cannot apply discount in order because not contain item %s.", ItemType.PRODUCT),
+                customException.getMessage()
+        );
+    }
+
     private Set<Item> createItems() {
         var itemOne = Item.builder()
                 .id(itemIdOne)
@@ -179,14 +355,15 @@ class OrderServiceTest {
     }
 
     private List<OrderItem> createOrderItems() {
-        var orderItemOne = OrderItem.builder()
+        var orderItems = new ArrayList<OrderItem>();
+        orderItems.add(OrderItem.builder()
                 .amount(2)
                 .item(itemsToOrder.get(0))
-                .build();
-        var orderItemTwo = OrderItem.builder()
+                .build());
+        orderItems.add(OrderItem.builder()
                 .amount(2)
                 .item(itemsToOrder.get(1))
-                .build();
-        return List.of(orderItemOne, orderItemTwo);
+                .build());
+        return orderItems;
     }
 }

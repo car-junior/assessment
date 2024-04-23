@@ -20,10 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -130,18 +127,25 @@ public class OrderService {
                 .filter(orderItem -> orderItem.getId() == null)
                 .toList();
 
-        // Lista dos order items vindos do banco e atualizados com as informações para atualização
-        var orderItems = getOrderItems(order);
-        var orderItemsMap = new HashMap<UUID, OrderItem>();
-        orderItems.forEach(orderItem -> orderItemsMap.put(orderItem.getId(), orderItem));
-        var updatedOrderItems = order.getOrderItems().stream()
-                .filter(orderItem -> orderItemsMap.containsKey(orderItem.getId()))
-                .map(updateOrderItem -> {
-                    var orderItem = orderItemsMap.get(updateOrderItem.getId());
-                    orderItem.setAmount(updateOrderItem.getAmount());
-                    orderItem.setItem(updateOrderItem.getItem());
-                    return orderItem;
-                }).toList();
+        var updatedOrderItems = new ArrayList<OrderItem>();
+        // Lista dos order items vindos do banco
+        var foundOrderItems = getOrderItems(order);
+
+        if (!foundOrderItems.isEmpty()) {
+            var orderItemsMap = new HashMap<UUID, OrderItem>();
+            foundOrderItems.forEach(orderItem -> orderItemsMap.put(orderItem.getId(), orderItem));
+            updatedOrderItems.addAll(
+                    order.getOrderItems().stream()
+                            .filter(orderItem -> orderItemsMap.containsKey(orderItem.getId()))
+                            .map(updateOrderItem -> {
+                                var orderItem = orderItemsMap.get(updateOrderItem.getId());
+                                orderItem.setAmount(updateOrderItem.getAmount());
+                                orderItem.setItem(updateOrderItem.getItem());
+                                return orderItem;
+                            }).toList()
+            );
+        }
+
         order.getOrderItems().clear();
         order.getOrderItems().addAll(newOrderItems);
         order.getOrderItems().addAll(updatedOrderItems);
@@ -163,6 +167,7 @@ public class OrderService {
     private Set<OrderItem> getOrderItems(Order order) {
         var orderItemsIds = order.getOrderItems().stream()
                 .map(OrderItem::getId)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         var orderItems = orderItemRepository.getAllByIdIn(orderItemsIds);
         assertExistsAllOrderItems(orderItemsIds, orderItems);
@@ -230,19 +235,19 @@ public class OrderService {
                     ).build();
     }
 
-    private void assertExistsAllOrderItems(Set<UUID> orderItemsIds, Set<OrderItem> orderItems) {
-        var foundOrderItemsIds = orderItems.stream()
+    private void assertExistsAllOrderItems(Set<UUID> orderItemsIdsToUpdate, Set<OrderItem> foundOrderItems) {
+        var foundOrderItemsIds = foundOrderItems.stream()
                 .map(OrderItem::getId)
                 .collect(Collectors.toSet());
 
-        var missingOrderItemsIds = orderItemsIds.stream()
-                .filter(itemId -> !foundOrderItemsIds.contains(itemId))
+        var missingOrderItemsIds = orderItemsIdsToUpdate.stream()
+                .filter(orderItemId -> !foundOrderItemsIds.contains(orderItemId))
                 .collect(Collectors.toSet());
 
         if (!missingOrderItemsIds.isEmpty())
             throw CustomException.builder()
                     .httpStatus(HttpStatus.NOT_FOUND)
-                    .message(String.format("Cannot found order items: [%s].", missingOrderItemsIds))
+                    .message(String.format("Cannot found order items: %s.", missingOrderItemsIds))
                     .build();
     }
 }
