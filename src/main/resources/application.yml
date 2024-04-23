@@ -29,3 +29,15 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         temp:
           use_jdbc_metadata_defaults: false
+  jackson:
+    default-property-inclusion: non_null
+    locale: pt_BR
+    time-zone: America/Sao_Paulo
+    serialization:
+      write-dates-as-timestamps: false
+      indent_output: true
+      fail_on_empty_beans: false
+    deserialization:
+      fail_on_unknown_properties: false
+      fail_on_null_for_primitives: false
+    date-format: com.fasterxml.jackson.databind.util.ISO8601DateFormat

@@ -37,14 +37,13 @@ public class ItemControllerIntegrationTest extends PostgreSQLContainerConfig {
     private static RequestSpecification requestSpecification;
 
     @BeforeAll
-    public static void setup() {
+    static void setup() {
         requestSpecification = new RequestSpecBuilder()
                 .setBasePath("/items")
                 .setPort(SERVER_PORT)
                 .addFilter(new RequestLoggingFilter(LogDetail.ALL))
                 .addFilter(new ResponseLoggingFilter(LogDetail.ALL))
                 .build();
-
         itemCreateUpdateDto = ItemCreateUpdateDto.builder()
                 .name("Smartphone XYZ")
                 .type(ItemType.PRODUCT)

@@ -19,7 +19,11 @@ public class OrderDetailDto {
     private UUID id;
     private double discount;
     private OrderStatus status;
+    private BigDecimal total;
+    private BigDecimal totalProduct;
+    private BigDecimal totalService;
     private List<OrderItemDetailDto> orderItems;
+
     public BigDecimal getTotalService() {
         return calculateTotal(ItemType.SERVICE)
                 .setScale(2, RoundingMode.HALF_UP);
