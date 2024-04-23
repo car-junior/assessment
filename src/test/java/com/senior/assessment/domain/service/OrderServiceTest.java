@@ -328,6 +328,62 @@ class OrderServiceTest {
         );
     }
 
+    @Test
+    void testGivenOrderId_whenDeleteOrderById_thenReturnNothing() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        order.setId(orderId);
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+
+        // When / Act
+        orderService.deleteOrderById(orderId);
+
+        // Then / Assert
+        verify(orderRepository, times(1)).deleteById(orderId);
+    }
+
+    @Test
+    void testGivenNonExistingOrderId_whenDeleteOrderById_thenThrowsCustomException() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.deleteOrderById(orderId));
+
+        // Then / Assert
+        verify(itemRepository, never()).deleteById(orderId);
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(
+                String.format("Cannot found order with id %s.", orderId),
+                customException.getMessage()
+        );
+    }
+
+    @Test
+    void testGivenOrderIdClosed_whenDeleteOrderById_thenThrowsCustomException() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        order.setId(orderId);
+        order.setStatus(OrderStatus.CLOSED);
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.deleteOrderById(orderId));
+
+        // Then / Assert
+        verify(orderRepository, never()).deleteById(orderId);
+        assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
+        assertEquals(
+                String.format("Cannot delete order %s.", OrderStatus.CLOSED),
+                customException.getMessage()
+        );
+    }
     private Set<Item> createItems() {
         var itemOne = Item.builder()
                 .id(itemIdOne)
