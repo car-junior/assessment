@@ -1,5 +1,6 @@
 package com.senior.assessment.domain.service;
 
+import com.senior.assessment.domain.dto.order.OrderStatusChangeDto;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.entity.OrderItem;
@@ -420,6 +421,68 @@ class OrderServiceTest {
         assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
         assertEquals(
                 String.format("Cannot found order with id %s.", orderId),
+                customException.getMessage()
+        );
+    }
+
+    @Test
+    void testGivenOrderId_whenUpdateStatus_thenReturnNothing() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        order.setId(orderId);
+        var newOrderStatus = OrderStatus.CLOSED;
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+
+        // When / Act
+        orderService.updateStatus(orderId, newOrderStatus);
+
+        // Then / Assert
+        verify(orderRepository, times(1)).updateStatus(orderId, newOrderStatus);
+    }
+
+    @Test
+    void testGivenNonExistsOrderId_whenUpdateStatus_thenThrowsCustomException() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        var newOrderStatus = OrderStatus.CLOSED;
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.updateStatus(orderId, newOrderStatus)
+        );
+
+        // Then / Assert
+        verify(orderRepository, never()).updateStatus(orderId, newOrderStatus);
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(
+                String.format("Cannot found order with id %s.", orderId),
+                customException.getMessage()
+        );
+    }
+
+    @Test
+    void testGivenOrderIdClosed_whenUpdateStatus_thenThrowsCustomException() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        order.setId(orderId);
+        order.setStatus(OrderStatus.CLOSED);
+        var newOrderStatus = OrderStatus.CLOSED;
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.updateStatus(orderId, newOrderStatus)
+        );
+
+        // Then / Assert
+        verify(orderRepository, never()).updateStatus(orderId, newOrderStatus);
+        assertEquals(HttpStatus.BAD_REQUEST, customException.getHttpStatus());
+        assertEquals(
+                String.format("Order %s already %s.", order.getId(), OrderStatus.CLOSED),
                 customException.getMessage()
         );
     }

@@ -77,8 +77,8 @@ public class OrderController {
 
     @PatchMapping("/{orderId}")
     public ResponseEntity<Void> updateStatusById(@PathVariable(name = "orderId") UUID orderId,
-                                           @Valid @RequestBody OrderStatusChangeDto orderStatus) {
-        orderService.updateStatus(orderId, orderStatus);
+                                           @Valid @RequestBody OrderStatusChangeDto orderStatusDto) {
+        orderService.updateStatus(orderId, orderStatusDto.getStatus());
         return ResponseEntity.noContent().build();
     }
 }

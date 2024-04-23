@@ -67,10 +67,10 @@ public class OrderService {
     }
 
     @Transactional
-    public void updateStatus(UUID orderId, OrderStatusChangeDto orderStatus) {
+    public void updateStatus(UUID orderId, OrderStatus orderStatus) {
         var order = getOrderById(orderId);
         assertOrderIsOpen(order, String.format("Order %s already %s.", order.getId(), OrderStatus.CLOSED));
-        orderRepository.updateStatus(order.getId(), orderStatus.getStatus());
+        orderRepository.updateStatus(order.getId(), orderStatus);
     }
 
     // private methods

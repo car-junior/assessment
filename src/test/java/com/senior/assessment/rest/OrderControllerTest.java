@@ -279,7 +279,7 @@ public class OrderControllerTest {
     @Test
     void testGivenOrderIdAndOrderStatus_whenUpdateStatusById_thenReturn204() throws Exception {
         // Given / Arrange
-        willDoNothing().given(orderService).updateStatus(any(UUID.class), any(OrderStatusChangeDto.class));
+        willDoNothing().given(orderService).updateStatus(any(UUID.class), any(OrderStatus.class));
 
         // When / Act
         var response = mockMvc.perform(
@@ -319,7 +319,7 @@ public class OrderControllerTest {
                 .httpStatus(HttpStatus.NOT_FOUND)
                 .message(String.format("Cannot found order with id %s.", orderId))
                 .build())
-                .given(orderService).updateStatus(any(UUID.class), any(OrderStatusChangeDto.class));
+                .given(orderService).updateStatus(any(UUID.class), any(OrderStatus.class));
 
         // When / Act
         var errorResponse = mockMvc.perform(
@@ -344,7 +344,7 @@ public class OrderControllerTest {
                 .httpStatus(HttpStatus.BAD_REQUEST)
                 .message(String.format("Order %s already %s.", orderId, OrderStatus.CLOSED))
                 .build())
-                .given(orderService).updateStatus(any(UUID.class), any(OrderStatusChangeDto.class));
+                .given(orderService).updateStatus(any(UUID.class), any(OrderStatus.class));
 
         // When / Act
         var errorResponse = mockMvc.perform(
