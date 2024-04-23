@@ -384,6 +384,46 @@ class OrderServiceTest {
                 customException.getMessage()
         );
     }
+
+    @Test
+    void testGivenOrderId_whenGetOrderById_thenReturnOrder() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+        order.setId(orderId);
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.of(order));
+
+        // When / Act
+        var foundOrder = orderService.getOrderById(orderId);
+
+        // Then / Assert
+        assertNotNull(foundOrder);
+        assertEquals(orderId, foundOrder.getId());
+        assertThat(foundOrder.getOrderItems()).isNotEmpty();
+        assertEquals(2, foundOrder.getOrderItems().size());
+        assertThat(foundOrder.getDiscount()).isEqualTo(order.getDiscount());
+    }
+
+    @Test
+    void testGivenNonExistsOrderId_whenGetOrderById_thenThrowsCustomException() {
+        // Given / Arrange
+        var orderId = UUID.randomUUID();
+
+        given(orderRepository.findById(any(UUID.class))).willReturn(Optional.empty());
+
+        // When / Act
+        var customException = assertThrows(
+                CustomException.class, () -> orderService.getOrderById(orderId)
+        );
+
+        // Then / Assert
+        assertEquals(HttpStatus.NOT_FOUND, customException.getHttpStatus());
+        assertEquals(
+                String.format("Cannot found order with id %s.", orderId),
+                customException.getMessage()
+        );
+    }
+
     private Set<Item> createItems() {
         var itemOne = Item.builder()
                 .id(itemIdOne)
