@@ -96,7 +96,7 @@ public class OrderController {
         return ResponseEntity.ok(modelMapperService.toPage(OrderDetailDto.class, result));
     }
 
-    @Operation(summary = "Operação para fechar(CLOSED) um pedido pedido por ID.",
+    @Operation(summary = "Operação para fechar(CLOSED) um order(pedido) por ID.",
             description = "Neste endpoint é possível fechar um pedido caso esteja em aberto.")
     @PatchMapping("/{orderId}")
     public ResponseEntity<Void> updateStatusById(@PathVariable(name = "orderId") UUID orderId,
