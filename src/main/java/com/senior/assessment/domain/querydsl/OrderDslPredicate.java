@@ -3,15 +3,17 @@ package com.senior.assessment.domain.querydsl;
 import com.querydsl.core.types.Predicate;
 import com.senior.assessment.domain.entity.QOrder;
 import com.senior.assessment.domain.querydsl.search.OrderSearch;
+import org.springframework.stereotype.Component;
 
 import static com.senior.assessment.utilities.Utils.*;
 
+@Component
 public class OrderDslPredicate {
 
     private OrderDslPredicate() {
     }
 
-    public static Predicate expression(OrderSearch orderSearch) {
+    public Predicate expression(OrderSearch orderSearch) {
         var order = QOrder.order;
         var predicate = order.id.isNotNull();
 

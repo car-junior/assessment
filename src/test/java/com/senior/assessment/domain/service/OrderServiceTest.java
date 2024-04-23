@@ -1,11 +1,15 @@
 package com.senior.assessment.domain.service;
 
+import com.querydsl.core.types.Predicate;
 import com.senior.assessment.domain.dto.order.OrderStatusChangeDto;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.entity.OrderItem;
 import com.senior.assessment.domain.enums.ItemType;
 import com.senior.assessment.domain.enums.OrderStatus;
+import com.senior.assessment.domain.querydsl.OrderDslPredicate;
+import com.senior.assessment.domain.querydsl.search.ItemSearch;
+import com.senior.assessment.domain.querydsl.search.OrderSearch;
 import com.senior.assessment.domain.repository.ItemRepository;
 import com.senior.assessment.domain.repository.OrderItemRepository;
 import com.senior.assessment.domain.repository.OrderRepository;
@@ -16,6 +20,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
@@ -38,7 +46,10 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Mock
+    private OrderDslPredicate orderDslPredicate;
+    @Mock
     private OrderItemRepository orderItemRepository;
+
 
     @InjectMocks
     private OrderService orderService;
@@ -487,6 +498,41 @@ class OrderServiceTest {
         );
     }
 
+    @Test
+    void testGivenEmptyOrderSearchAndPaginationDefault_whenGetAllOrder_thenReturnFoundOrderPage() {
+        // Given / Arrange
+        var orders = createOrders();
+        var orderPage = createPage(orders);
+
+        when(orderDslPredicate.expression(any(OrderSearch.class))).thenReturn(mock(Predicate.class));
+        when(orderRepository.findAll(any(Predicate.class), any(Pageable.class))).thenReturn(orderPage);
+
+        // When / Act
+        var foundOrderPage = orderService.getAllOrder(mock(OrderSearch.class), mock(Pageable.class));
+
+        // Then / Assert
+        assertNotNull(foundOrderPage);
+        assertEquals(1, foundOrderPage.getTotalPages());
+        assertEquals(2, foundOrderPage.getTotalElements());
+    }
+
+    @Test
+    void testGivenOrderSearchAndPaginationDefault_whenGetAllOrder_thenReturnEmptyOrderPage() {
+        // Given / Arrange
+        var orderPage = new PageImpl<Order>(Collections.emptyList(), PageRequest.of(0, 10), 0);
+
+        when(orderDslPredicate.expression(any(OrderSearch.class))).thenReturn(mock(Predicate.class));
+        when(orderRepository.findAll(any(Predicate.class), any(Pageable.class))).thenReturn(orderPage);
+
+        // When / Act
+        var foundOrderPage = orderService.getAllOrder(mock(OrderSearch.class), mock(Pageable.class));
+
+        // Then / Assert
+        assertNotNull(foundOrderPage);
+        assertEquals(0, foundOrderPage.getTotalPages());
+        assertEquals(0, foundOrderPage.getTotalElements());
+    }
+
     private Set<Item> createItems() {
         var itemOne = Item.builder()
                 .id(itemIdOne)
@@ -524,5 +570,18 @@ class OrderServiceTest {
                 .item(itemsToOrder.get(1))
                 .build());
         return orderItems;
+    }
+
+    private List<Order> createOrders() {
+        order.setId(UUID.randomUUID());
+        var orderTwo = order.toBuilder()
+                .id(UUID.randomUUID())
+                .discount(0.5)
+                .build();
+        return List.of(order, orderTwo);
+    }
+
+    private Page<Order> createPage(List<Order> orders) {
+        return new PageImpl<>(orders, PageRequest.of(0, 10), orders.size());
     }
 }

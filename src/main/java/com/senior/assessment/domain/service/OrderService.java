@@ -1,6 +1,5 @@
 package com.senior.assessment.domain.service;
 
-import com.senior.assessment.domain.dto.order.OrderStatusChangeDto;
 import com.senior.assessment.domain.entity.Item;
 import com.senior.assessment.domain.entity.Order;
 import com.senior.assessment.domain.entity.OrderItem;
@@ -28,6 +27,8 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final ItemRepository itemRepository;
     private final OrderRepository orderRepository;
+
+    private final OrderDslPredicate orderDslPredicate;
 
     private final OrderItemRepository orderItemRepository;
 
@@ -63,7 +64,7 @@ public class OrderService {
     }
 
     public Page<Order> getAllOrder(OrderSearch orderSearch, Pageable pagination) {
-        return orderRepository.findAll(OrderDslPredicate.expression(orderSearch), pagination);
+        return orderRepository.findAll(orderDslPredicate.expression(orderSearch), pagination);
     }
 
     @Transactional
