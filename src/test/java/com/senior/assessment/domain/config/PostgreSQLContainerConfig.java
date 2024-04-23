@@ -1,10 +1,7 @@
 package com.senior.assessment.domain.config;
 
-import org.junit.jupiter.api.BeforeAll;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Import;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -14,7 +11,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @ContextConfiguration(initializers = PostgreSQLContainerConfig.Initializer.class)
-@Import(FlywayMigrationConfig.class)
 public abstract class PostgreSQLContainerConfig {
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 

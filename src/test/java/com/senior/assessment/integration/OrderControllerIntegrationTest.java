@@ -20,6 +20,7 @@ import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -312,9 +313,6 @@ public class OrderControllerIntegrationTest extends PostgreSQLContainerConfig {
         assertEquals(1, pageResult.getTotalPages());
         assertEquals(2, pageResult.getTotalResults());
     }
-
-    // Testes cenários negativos
-
     @Test
     @Order(10)
     void testGivenInvalidOrderCreateUpdateDto_whenCreateOrder_thenReturn400AndErrorResponse() {
@@ -436,8 +434,39 @@ public class OrderControllerIntegrationTest extends PostgreSQLContainerConfig {
         assertNotNull(errorResponse.getMessage());
     }
 
+
     @Test
     @Order(15)
+    @Transactional
+    void testGivenItemIdLinkedWithOrder_whenDeleteItemById_thenReturn400AndErrorResponse() {
+        var orderDetailDto = given()
+                .spec(requestSpecification)
+                .when()
+                .get("/{orderId}", orderTwoId)
+                .then()
+                .statusCode(200)
+                .extract()
+                .body()
+                .as(OrderDetailDto.class);
+
+        var itemId = orderDetailDto.getOrderItems().get(0).getItem().getId();
+
+        var errorResponse = given().spec(requestSpecificationItem)
+                .when()
+                .delete("/{itemId}", itemId)
+                .then()
+                .statusCode(400)
+                .extract()
+                .body()
+                .as(ErrorResponse.class);
+
+        assertNotNull(errorResponse);
+        assertNotNull(errorResponse.getStatus());
+        assertEquals("Cannot delete item because have linked order.", errorResponse.getMessage());
+    }
+
+    @Test
+    @Order(16)
     void testGivenOrderId_whenDeleteOrderById_thenReturn204NonContent() {
         given()
                 .spec(requestSpecification)
