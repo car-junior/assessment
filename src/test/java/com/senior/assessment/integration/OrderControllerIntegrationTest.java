@@ -1,6 +1,7 @@
 package com.senior.assessment.integration;
 
 import com.senior.assessment.domain.config.PostgreSQLContainerConfig;
+import com.senior.assessment.domain.config.integration.IntegrationTestBase;
 import com.senior.assessment.domain.dto.PageResult;
 import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
 import com.senior.assessment.domain.dto.item.ItemDetailDto;
@@ -37,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class OrderControllerIntegrationTest extends PostgreSQLContainerConfig {
+public class OrderControllerIntegrationTest extends IntegrationTestBase {
     private static UUID orderOneId;
     private static UUID orderTwoId;
     private static OrderCreateUpdateDto orderCreateUpdateDto;
@@ -437,7 +438,6 @@ public class OrderControllerIntegrationTest extends PostgreSQLContainerConfig {
 
     @Test
     @Order(15)
-    @Transactional
     void testGivenItemIdLinkedWithOrder_whenDeleteItemById_thenReturn400AndErrorResponse() {
         var orderDetailDto = given()
                 .spec(requestSpecification)

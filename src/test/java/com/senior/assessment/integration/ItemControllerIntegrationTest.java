@@ -1,6 +1,7 @@
 package com.senior.assessment.integration;
 
 import com.senior.assessment.domain.config.PostgreSQLContainerConfig;
+import com.senior.assessment.domain.config.integration.IntegrationTestBase;
 import com.senior.assessment.domain.dto.PageResult;
 import com.senior.assessment.domain.dto.item.ItemCreateUpdateDto;
 import com.senior.assessment.domain.dto.item.ItemDetailDto;
@@ -15,6 +16,8 @@ import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -27,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-public class ItemControllerIntegrationTest extends PostgreSQLContainerConfig {
+public class ItemControllerIntegrationTest extends IntegrationTestBase {
     private static UUID itemId;
     private static ItemCreateUpdateDto itemCreateUpdateDto;
     private static RequestSpecification requestSpecification;
