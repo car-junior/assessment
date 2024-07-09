@@ -9,6 +9,9 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
@@ -23,6 +26,8 @@ import java.util.UUID;
 @AllArgsConstructor
 @Table(name = "item", schema = "dbo")
 @EntityListeners(AuditingEntityListener.class)
+@FilterDef(name = "statusActive", parameters = @ParamDef(name = "status", type = String.class))
+@Filter(name = "statusActive", condition = "status = :status")
 public class Item extends Auditable {
     //TODO: Adicionar bean validations nas entidades
     @Id
